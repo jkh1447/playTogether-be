@@ -1,6 +1,12 @@
+﻿---
+trigger: manual
 ---
+
+---
+
 name: my-project-rule
 description: This is a new rule
+
 ---
 
 # Overview
@@ -8,6 +14,7 @@ description: This is a new rule
 # Cursor Project Rules (Spring Boot STRICT)
 
 ## Tech Stack
+
 - Spring Boot 3.5.x
 - Java 21
 - Spring Data JPA
@@ -17,34 +24,40 @@ description: This is a new rule
 - JWT Authentication
 
 ## Architecture
+
 - MVC architecture required
-- Controller → Service → Repository only
+- Controller ?�� Service ?�� Repository only
 - Controllers must be thin
 - Business logic belongs only in Service
 - Controllers must NEVER access Repository
 - JWT logic must NOT exist in Controller or Service
 
 ## Package Structure
+
 - All code must live under base package (@SpringBootApplication)
 - Required packages:
   controller, service, repository, model, dto, exception, global
 
 ## Controller Rules
+
 - Controllers handle HTTP only
 - Controllers must use DTOs
 - Controllers must NOT return Entity
 - Validation required (@Valid)
 
 ## Service Rules
+
 - Business logic only
 - Transaction boundaries belong in Service
 - Throw domain-specific exceptions only
 
 ## Repository Rules
+
 - Extend JpaRepository only
 - No business logic in Repository
 
 ## Entity Rules
+
 - Use @Entity
 - No DTO dependency
 - Avoid bidirectional relationships
@@ -52,37 +65,33 @@ description: This is a new rule
 - Do NOT use @Data
 
 ## DTO Rules
+
 - Separate Request / Response DTO
 - No JPA annotations
 - No business logic
 
-## Exception Rules
-- All exceptions extend BusinessException
-- Use ErrorCode enum
-- Do not throw RuntimeException directly
-
 ## Global Rules
+
 - GlobalExceptionHandler required
 - Unified API response format required
 
-## JWT / Security Rules
-- JWT logic lives in global/security
-- Authentication handled in Spring Security Filter Chain
-- Controllers assume authentication already completed
-
 ## Redis Rules
+
 - Redis used only for cache or token storage
 - Redis logic must not mix with JPA entities
 
 ## Dependency Injection
+
 - Constructor injection only
 - Field injection forbidden
 
 ## Lombok Rules
+
 - Prefer @Getter, @RequiredArgsConstructor
 - No @Data on Entities
 
 ## Code Quality
+
 - Keep methods short and focused
 - Prefer clarity over cleverness
 - Follow existing project structure strictly
