@@ -1,4 +1,4 @@
-package com.jkh1447.MyProject.domain.users;
+package com.jkh1447.MyProject.domain.auth;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -43,9 +43,6 @@ public class Users {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Gender gender;
-
-    @Column(nullable = false)
-    private String birthDate;
 
     @Builder.Default
     @Column(columnDefinition = "integer default 0")

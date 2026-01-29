@@ -13,4 +13,7 @@ import lombok.Setter;
 public class JWTConfig {
     private String secret;
     private long expiration;
+    private long refreshExpiration;
+    private boolean cookieSecure;
+    private String cookieSameSite;
 }
