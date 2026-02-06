@@ -19,7 +19,7 @@ import lombok.Getter;
 public class RefreshToken {
 
     @Id
-    private Long userId;
+    private String userId;
 
     @Column(nullable = false)
     private String refreshToken;

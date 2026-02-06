@@ -1,14 +1,19 @@
 package com.jkh1447.MyProject.global.advice;
 
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import com.jkh1447.MyProject.domain.auth.exception.AuthErrorCode;
 import com.jkh1447.MyProject.domain.auth.exception.AuthException;
+import com.jkh1447.MyProject.domain.auth.exception.RefreshTokenNotFoundFromCooKie;
+import com.jkh1447.MyProject.domain.users.exception.UserNotFoundException;
+import com.jkh1447.MyProject.global.response.ApiResponse;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.http.ResponseEntity;
-import java.util.HashMap;
 import org.springframework.http.HttpStatus;
-import java.util.Map;
+import com.jkh1447.MyProject.domain.auth.exception.TokenException;
+import com.jkh1447.MyProject.domain.auth.exception.TokenExpiredException;
+import lombok.extern.slf4j.Slf4j;
 
-
+@Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -18,16 +23,51 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(AuthException.class)
-    public ResponseEntity<Map<String, String>> handleUserException(AuthException e) {
-        Map<String, String> response = new HashMap<>();
-        response.put("code", e.getMessage()); 
-        response.put("status", e.getHttpStatus().name()); 
+    public ResponseEntity<ApiResponse<?>> handleUserException(AuthException e) {
 
-        return ResponseEntity.status(e.getHttpStatus()).body(response);
+        log.error("사용자 관련 오류 발생: {}", e.getMessage(), e);
+
+        return ResponseEntity.status(e.getHttpStatus()).body(ApiResponse.fail(e.getHttpStatus().name(), e.getMessage()));
     }
 
+    @ExceptionHandler(UserNotFoundException.class)
+    public ResponseEntity<ApiResponse<?>> handleUserNotFoundException(UserNotFoundException e) {
+
+        log.warn("사용자 없음 오류 발생: {}", e.getMessage(), e);
+
+        return ResponseEntity.status(e.getHttpStatus()).body(ApiResponse.fail(e.getHttpStatus().name(), e.getMessage()));
+    }
+
+    // 만료토큰이 아닌 모든 유효하지 않은 토큰에 대해서 처리, 엑세스 토큰은 filter에서 처리하므로 이 핸들러는 리프래시 토큰을 위함임
+    @ExceptionHandler(TokenException.class)
+    public ResponseEntity<ApiResponse<?>> handleTokenException(TokenException e) {
+
+        log.error("토큰 관련 오류 발생: {}", e.getMessage(), e);
+
+        return ResponseEntity.status(e.getHttpStatus()).body(ApiResponse.fail(e.getHttpStatus().name(), e.getMessage()));
+    }   
+
+    // (리프래시)토큰이 만료되었을 경우
+    @ExceptionHandler(TokenExpiredException.class)
+    public ResponseEntity<ApiResponse<?>> handleTokenExpiredException(TokenExpiredException e) {
+
+        log.error("리프래시 토큰 만료: {}", e.getMessage(), e);
+        //프론트에서 로그인 페이지로 리다이렉트, 세션종료 알림
+        return ResponseEntity.status(e.getHttpStatus()).body(ApiResponse.fail(AuthErrorCode.REFRESH_TOKEN_EXPIRED.name(), e.getMessage()));
+    }
+
+    @ExceptionHandler(RefreshTokenNotFoundFromCooKie.class)
+    public ResponseEntity<ApiResponse<?>> handleRefreshTokenNotFoundFromCooKie(RefreshTokenNotFoundFromCooKie e) {
+
+        log.error("리프래시 토큰 없음: {}", e.getMessage(), e);
+        //프론트에서 로그인 페이지로 리다이렉트, 세션종료 알림
+        return ResponseEntity.status(e.getHttpStatus()).body(ApiResponse.fail(AuthErrorCode.REFRESH_TOKEN_NOT_FOUND_FROM_COOKIE.name(), e.getMessage()));
+    }
+
+    // 추후 응답형식 수정
     @ExceptionHandler(Exception.class)
     public ResponseEntity<String> handleAllException(Exception e) {
+        log.error("서버 내부 오류 발생: {}", e.getMessage(), e);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("서버 내부 오류가 발생했습니다.");
     }
 }

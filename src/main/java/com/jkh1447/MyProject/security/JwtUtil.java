@@ -14,10 +14,17 @@ import java.util.Date;
 import java.security.Key;
 import jakarta.annotation.PostConstruct;
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.SignatureAlgorithm;
 import lombok.RequiredArgsConstructor;
+import com.jkh1447.MyProject.domain.auth.AuthConstants;
+import com.jkh1447.MyProject.domain.auth.exception.AuthErrorCode;
+import com.jkh1447.MyProject.domain.auth.exception.NoAuthenticationInfoException;
+import com.jkh1447.MyProject.domain.auth.exception.TokenException;
+import com.jkh1447.MyProject.domain.auth.exception.TokenExpiredException;
 import com.jkh1447.MyProject.global.config.JWTConfig;
 
 @Component
@@ -32,26 +39,46 @@ public class JwtUtil {
         this.key = Keys.hmacShaKeyFor(jwtConfig.getSecret().getBytes());
     }
 
-    public String generateToken(Long userId) {
-        return Jwts.builder().setSubject(userId.toString()).setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + jwtConfig.getExpiration()))
+    public String buildToken(String subject, long expiration) {
+        return Jwts.builder().setSubject(subject).setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + expiration))
                 .signWith(key, SignatureAlgorithm.HS256).compact();
+    }
+
+    // userId는 db의 id임
+    public String generateToken(Long userId) {
+        return buildToken(userId.toString(), jwtConfig.getExpiration());
     }
 
     public String generateRefreshToken(Long userId) {
-        return Jwts.builder().setSubject(userId.toString()).setIssuedAt(new Date())
-                .setExpiration(
-                        new Date(System.currentTimeMillis() + jwtConfig.getRefreshExpiration()))
-                .signWith(key, SignatureAlgorithm.HS256).compact();
+        return buildToken(userId.toString(), jwtConfig.getRefreshExpiration());
     }
 
+    public String generateGuestToken(String userId) {
+        String subject = AuthConstants.GUEST_TOKEN_PREFIX + userId;
+        return buildToken(subject, jwtConfig.getExpiration());
+    }
+
+    public String generateGuestRefreshToken(String userId) {
+        String subject = AuthConstants.GUEST_TOKEN_PREFIX + userId;
+        return buildToken(subject, jwtConfig.getRefreshExpiration());
+    }
+
+    /**
+     * Validates the given JWT token.
+     * <p>
+     * If the token is expired, throws an EXPIRED_TOKEN exception.
+     * If the token is invalid, throws an INVALID_TOKEN exception.
+     * </p>
+     */
     public boolean validateToken(String token) {
         try {
             Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
             return true;
-        } catch (Exception e) {
-            // 예외처리 다음에 추가
-            return false;
+        } catch (ExpiredJwtException e) {
+            throw new TokenExpiredException();
+        } catch (JwtException | IllegalArgumentException e) {
+            throw new TokenException(AuthErrorCode.INVALID_TOKEN);
         }
     }
 
@@ -72,15 +99,16 @@ public class JwtUtil {
                 userDetails.getAuthorities());
     }
 
-    public static Long getCurrentUserId() {
+    // get user's id
+    public static String getCurrentUserId() {
         final Authentication authentication =
                 SecurityContextHolder.getContext().getAuthentication();
 
         if (authentication == null || authentication.getName() == null) {
-            throw new RuntimeException("No authentication information");
+            throw new NoAuthenticationInfoException();
         }
 
-        return Long.parseLong(authentication.getName());
+        return authentication.getName();
     }
 
     public static String getTokenFromCookie(HttpServletRequest request, String cookieName) {
@@ -93,5 +121,10 @@ public class JwtUtil {
             }
         }
         return null;
+    }
+
+    public String getSubjectFromToken(String token) {
+        return Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token).getBody()
+                .getSubject();
     }
 }

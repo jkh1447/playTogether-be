@@ -1,4 +1,4 @@
-package com.jkh1447.MyProject.domain.auth;
+package com.jkh1447.MyProject.domain.users;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -14,6 +14,7 @@ import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 import lombok.AccessLevel;
 import org.hibernate.annotations.CreationTimestamp;
+import com.jkh1447.MyProject.domain.auth.Role;
 import java.time.LocalDateTime;
 
 @Entity
@@ -28,25 +29,27 @@ public class Users {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "login_id", nullable = false, unique = true, length = 50)
-    private String loginId;
-
-    @Column(name = "password", nullable = true, length = 100)
-    private String password;
-
-    @Column(nullable = false, unique = true, length = 50)
+    @Column(nullable = false)
     private String email;
 
-    @Column(nullable = false, unique = true, length = 30)
+    @Column(nullable = false)
     private String nickname;
+
+    @Column(nullable = false)
+    private String provider; // "google", "naver" 등
+
+    @Column(nullable = false)
+    private String providerId; // 구글의 'sub'이나 네이버의 'id' 값
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private Gender gender;
+    private Role role; // ROLE_USER, ROLE_GUEST 등
 
-    @Builder.Default
-    @Column(columnDefinition = "integer default 0")
-    private int credit = 0;
+    // 나중에 네이버 연동 시 닉네임이나 프로필 이미지가 바뀔 수 있으므로 업데이트 메서드 추가
+    public void updateInfo(String email, String nickname) {
+        this.email = email;
+        this.nickname = nickname;
+    }
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)

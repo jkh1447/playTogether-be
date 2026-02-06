@@ -1,13 +1,13 @@
-package com.jkh1447.MyProject.domain.auth.exception;
+package com.jkh1447.MyProject.domain.users.exception;
 
-import lombok.Getter;
 import org.springframework.http.HttpStatus;
+import lombok.Getter;
 
 @Getter
-public abstract class AuthException extends RuntimeException {
+public class UserException extends RuntimeException {
     private final HttpStatus httpStatus;
 
-    public AuthException(AuthErrorCode errorCode) {
+    public UserException(UserErrorCode errorCode) {
         super(errorCode.getMessage());
         this.httpStatus = errorCode.getHttpStatus();
     }

@@ -4,12 +4,15 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import com.jkh1447.MyProject.security.JwtAuthenticationFilter;
 import com.jkh1447.MyProject.security.JwtUtil;
+import com.jkh1447.MyProject.security.OAuth2SuccessHandler;
+import com.jkh1447.MyProject.service.auth.CustomOAuth2UserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import jakarta.servlet.http.HttpServletResponse;
@@ -22,6 +25,9 @@ import lombok.RequiredArgsConstructor;
 public class SecurityConfig {
 
     private final JwtUtil jwtUtil;
+    private final ServerConfig serverConfig;
+    private final CustomOAuth2UserService customOAuth2UserService;
+    private final OAuth2SuccessHandler oAuth2SuccessHandler;
 
     @Bean
     public BCryptPasswordEncoder passwordEncoder() {
@@ -35,7 +41,7 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(request -> {
                     var config = new org.springframework.web.cors.CorsConfiguration();
                     config.setAllowCredentials(true);
-                    config.setAllowedOrigins(java.util.List.of("http://localhost:5173"));
+                    config.setAllowedOrigins(java.util.List.of(serverConfig.getUrl()));
                     config.setAllowedMethods(java.util.List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
                     config.setAllowedHeaders(java.util.List.of("*"));
                     return config;
@@ -50,10 +56,16 @@ public class SecurityConfig {
                             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized");
                         }))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/signup", "/api/auth/login").permitAll() // 회원가입, 로그인
-                        .requestMatchers("/api/auth/refresh").permitAll()
+                        .requestMatchers("/api/auth/signup", "/api/auth/login", "/api/auth/guest", "/api/auth/logout", "/api/auth/refresh", "/api/users/me").permitAll() // 회원가입, 로그인
+                        .requestMatchers("/oauth2/**", "/login/oauth2/**").permitAll()
                         .anyRequest().authenticated() // 나머지는 토큰이 있어야 함
-                );
+                )
+                .oauth2Login(oauth -> oauth
+                        .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService))
+                        .successHandler(oAuth2SuccessHandler)
+                )
+                .sessionManagement(session -> session
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
         return http.build();
     }
