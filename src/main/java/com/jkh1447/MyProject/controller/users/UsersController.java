@@ -33,9 +33,10 @@ public class UsersController {
         
         log.info("name: {}", name);
         if(name.startsWith(AuthConstants.GUEST_TOKEN_PREFIX)) { // 게스트인 경우
+            String guestIdPart = name.split("_")[1].substring(0, 4);
             UserResponse response = UserResponse.builder()
                     .role(Role.GUEST)
-                    .nickname("")
+                    .nickname(AuthConstants.GUEST_NICKNAME_PREFIX + guestIdPart)
                     .userId(authentication.getName())
                     .build();
             return ResponseEntity.ok(ApiResponse.success(response));

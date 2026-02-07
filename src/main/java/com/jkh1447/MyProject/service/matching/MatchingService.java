@@ -91,6 +91,13 @@ public class MatchingService {
 
     }
 
+    /*
+     * room status 생성
+     * 구조는 hash로 구성
+     * redisKey: room:status:roomId
+     * key: userId
+     * value: nickname
+     */
     private void addRoomStatusFromMatchStatus(String matchId, String roomId) {
         
         String roomStatusKey = MatchingConstants.ROOM_STATUS_KEY + roomId;

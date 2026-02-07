@@ -10,8 +10,10 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.jkh1447.MyProject.dto.chating.ParticipantInfo;
+import com.jkh1447.MyProject.dto.chating.ParticipantDto;
 import com.jkh1447.MyProject.global.response.ApiResponse;
+import com.jkh1447.MyProject.domain.matching.MatchingConstants;
+import com.jkh1447.MyProject.service.chating.ChatRoomService;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -19,18 +21,12 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class ChatRoomController {
     
-    private final RedisTemplate<String, Object> redisTemplate;
+    private final ChatRoomService chatRoomService;
 
     @GetMapping("/room/{roomId}/participants")
-    public ResponseEntity<ApiResponse<List<ParticipantInfo>>> getParticipants(@PathVariable String roomId) {
-        String roomKey = "chat:room:" + roomId + ":participants";
+    public ResponseEntity<ApiResponse<ParticipantDto>> getParticipants(@PathVariable String roomId) {
         
-        // Redis Hash에서 모든 필드와 값을 가져옴
-        Map<Object, Object> entries = redisTemplate.opsForHash().entries(roomKey);
-        
-        List<ParticipantInfo> participants = entries.entrySet().stream()
-                .map(entry -> new ParticipantInfo((String) entry.getKey(), (String) entry.getValue()))
-                .collect(Collectors.toList());
+        ParticipantDto participants = chatRoomService.getParticipants(roomId);
 
         return ResponseEntity.ok(ApiResponse.success(participants));
     }

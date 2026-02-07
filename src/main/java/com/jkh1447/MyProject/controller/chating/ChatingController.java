@@ -26,6 +26,6 @@ public class ChatingController {
         ChatMessageDto message = chatingService.sendMessage(roomId, chatMessage);
         
         // 해당 주소는 프론트엔드에서 구독해야함.
-        messagingTemplate.convertAndSend("/topic/chat.room/" + roomId, message);
+        messagingTemplate.convertAndSend("/topic/chat/" + roomId, message);
     }
 }

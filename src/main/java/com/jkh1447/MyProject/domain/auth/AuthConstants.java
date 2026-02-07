@@ -10,4 +10,6 @@ public class AuthConstants {
 
     public static final String GUEST_TOKEN_PREFIX = "GUEST_";
     public static final String GUEST_TOKEN_ISSUED = "게스트 토큰이 발급되었습니다.";
+
+    public static final String GUEST_NICKNAME_PREFIX = "게스트_";
 }
