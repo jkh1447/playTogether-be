@@ -9,4 +9,7 @@ public class MatchingConstants {
     public static final String MATCH_ACCEPT_COUNT = "acceptCount";
     public static final String MATCH_PARTICIPANTS_DATA = "participantsData";
     public static final String MATCH_QUEUE_KEY = "queueKey";
+    
+    public static final String SUB_MATCH_FOUND_PATH = "/queue/match-found";
+    public static final String SUB_MOVE_ROOM_PATH = "/queue/move-room";
 }

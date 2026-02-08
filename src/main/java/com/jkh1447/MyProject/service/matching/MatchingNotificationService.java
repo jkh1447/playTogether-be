@@ -6,6 +6,8 @@ import com.jkh1447.MyProject.dto.matching.MatchCompleteResponse;
 import com.jkh1447.MyProject.dto.matching.MatchFoundResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.jkh1447.MyProject.domain.matching.MatchingConstants;
+import org.springframework.context.annotation.Lazy;
 
 @Slf4j
 @Service
@@ -13,6 +15,10 @@ import lombok.extern.slf4j.Slf4j;
 public class MatchingNotificationService {
 
     private final SimpMessagingTemplate messagingTemplate;
+
+    // public MatchingNotificationService(@Lazy SimpMessagingTemplate messagingTemplate) {
+    //     this.messagingTemplate = messagingTemplate;
+    // }
 
     // 스프링이 알아서 소켓을 연결할때 기록했던 userId의 주소로 메세지를 전송함.
     public void sendMatchFound(String userId, String matchId) {
@@ -22,10 +28,10 @@ public class MatchingNotificationService {
             .timeoutSeconds(15)
             .build();
 
-        // /queue/user1/match-found 주소로 matchId를 보냄
+        // user/{userId}/queue/match-found 주소로 matchId를 보냄
         messagingTemplate.convertAndSendToUser(
             userId, 
-            "/queue/match-found", 
+            MatchingConstants.SUB_MATCH_FOUND_PATH, 
             matchFoundResponse
         );
 
@@ -40,7 +46,7 @@ public class MatchingNotificationService {
 
         messagingTemplate.convertAndSendToUser(
             userId,
-            "/queue/move-room",
+            MatchingConstants.SUB_MOVE_ROOM_PATH,
             matchCompleteResponse
         );
     }

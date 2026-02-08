@@ -114,7 +114,9 @@ public class MatchingService {
             roomStatus.put(userId, nickname);
         }
 
+        
         redisTemplate.opsForHash().putAll(roomStatusKey, roomStatus);
-        redisTemplate.expire(roomStatusKey, Duration.ofHours(1)); // 방 유지시간
+        log.info("[Redis Write] Room Status Key: {}, Data: {}", roomStatusKey, roomStatus);
+        //redisTemplate.expire(roomStatusKey, Duration.ofHours(1)); // 방 유지시간
     }
 }

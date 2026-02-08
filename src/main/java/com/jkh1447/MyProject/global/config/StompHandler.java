@@ -7,14 +7,11 @@ import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.messaging.support.MessageHeaderAccessor;
 import org.springframework.stereotype.Component;
-import com.jkh1447.MyProject.domain.matching.MatchingConstants;
-import com.jkh1447.MyProject.dto.chating.ChatMessageDto;
-import com.jkh1447.MyProject.dto.chating.ParticipantDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import com.jkh1447.MyProject.service.chating.ChatRoomService;
+import com.jkh1447.MyProject.domain.chating.ChatingConstants;
+import com.jkh1447.MyProject.domain.matching.MatchingConstants;
 import com.jkh1447.MyProject.service.chating.ChatMessageSenderService;
 
 @Slf4j
@@ -22,24 +19,29 @@ import com.jkh1447.MyProject.service.chating.ChatMessageSenderService;
 @Component
 public class StompHandler implements ChannelInterceptor {
 
-    private final RedisTemplate<String, Object> redisTemplate;
-    private final SimpMessagingTemplate messagingTemplate;
     private final ChatRoomService chatRoomService;
     private final ChatMessageSenderService chatMessageSenderService;
 
     @Override
     public Message<?> preSend(Message<?> message, MessageChannel channel) {
         // 메세지 헤더 접근자
-        StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);   
-        
+        StompHeaderAccessor accessor =
+                MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
+
+        // log.info("메세지 헤더: {}", accessor);
+
+        if (accessor == null || accessor.getCommand() == null) {
+            return message;
+        }
+        String destination = accessor.getDestination();
         // 구독 메세지인 경우
-        if(StompCommand.SUBSCRIBE.equals(accessor.getCommand())) {
+        if (StompCommand.SUBSCRIBE.equals(accessor.getCommand())
+                && destination.startsWith(ChatingConstants.SUB_ROOM_PATH)) {
             handleSubscribe(accessor);
+        } else if (StompCommand.UNSUBSCRIBE.equals(accessor.getCommand())) {
+            // handleUnsubscribe(accessor);
         }
-        else if (StompCommand.UNSUBSCRIBE.equals(accessor.getCommand())) {
-            handleUnsubscribe(accessor);
-        }
-        return message; 
+        return message;
     }
 
     private void handleSubscribe(StompHeaderAccessor accessor) {
@@ -60,7 +62,7 @@ public class StompHandler implements ChannelInterceptor {
         String userId = (String) accessor.getSessionAttributes().get("userId");
         String nickname = (String) accessor.getSessionAttributes().get("nickname");
 
-        if(roomId != null && userId != null) {
+        if (roomId != null && userId != null) {
             // 채팅방에서 제거
             chatRoomService.removeParticipant(roomId, userId);
 

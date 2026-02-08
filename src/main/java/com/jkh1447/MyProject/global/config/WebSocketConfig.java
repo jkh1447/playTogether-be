@@ -15,7 +15,7 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 import org.springframework.web.socket.server.support.HttpSessionHandshakeInterceptor;
 import com.jkh1447.MyProject.domain.matching.MatchingConstants;
 import com.jkh1447.MyProject.dto.chating.ChatMessageDto;
-import com.jkh1447.MyProject.dto.chating.ParticipantDto;
+import com.jkh1447.MyProject.dto.chating.ParticipantsDto;
 import org.springframework.messaging.Message;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -26,22 +26,22 @@ import lombok.RequiredArgsConstructor;
 import com.jkh1447.MyProject.service.chating.ChatRoomService;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.context.annotation.Lazy;
 
 @Slf4j
 @Configuration
 @EnableWebSocketMessageBroker
-@RequiredArgsConstructor
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
-    private final RedisTemplate<String, Object> redisTemplate;
-    private final SimpMessagingTemplate messagingTemplate;
-    private final ChatRoomService chatRoomService;
     private final StompHandler stompHandler;
+
+    public WebSocketConfig(@Lazy StompHandler stompHandler) {
+        this.stompHandler = stompHandler;
+    }
 
     @Override
     public void configureMessageBroker(MessageBrokerRegistry config) {
-        config.enableSimpleBroker("/topic", "/queue")
-                .setHeartbeatValue(new long[] { 10000, 10000 })
+        config.enableSimpleBroker("/topic", "/queue").setHeartbeatValue(new long[] {10000, 10000})
                 .setTaskScheduler(heartbeatScheduler());
         config.setApplicationDestinationPrefixes("/app"); // 서버의 웹소켓 요청주소 prefix
 

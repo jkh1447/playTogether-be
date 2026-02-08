@@ -14,8 +14,10 @@ import lombok.extern.slf4j.Slf4j;
 public class ChatingService {
 
     private final RedisTemplate<String, String> redisTemplate;
+    private final ChatRoomService chatRoomService;
+    private final ChatMessageSenderService chatMessageSenderService;
 
-    public ChatMessageDto sendMessage(String roomId, ChatMessageDto chatMessage) {
+    public ChatMessageDto createChatMessageDto(String roomId, ChatMessageDto chatMessage) {
         
         String roomKey = MatchingConstants.ROOM_STATUS_KEY + roomId;
 
@@ -29,16 +31,16 @@ public class ChatingService {
                 message = ChatMessageDto.createTalkMessage(roomId, chatMessage.senderId(), chatMessage.senderNickname(), chatMessage.content());
                 break;
             case LEAVE:
-                redisTemplate.opsForSet().remove(roomKey, chatMessage.senderId());
                 message = ChatMessageDto.createLeaveMessage(roomId, chatMessage.senderId(), chatMessage.senderNickname());
-
-                checkAndCleanupRoom(roomKey);
+                chatRoomService.removeParticipant(roomId, chatMessage.senderId());
+                chatMessageSenderService.sendParticipants(roomId);
                 break;
         }        
 
         return message;
     }
 
+    // 참가자 나가기는 인터셉터에서 처리
     private void checkAndCleanupRoom(String roomKey) {
         Long size = redisTemplate.opsForHash().size(roomKey);
         if (size == null || size == 0) {

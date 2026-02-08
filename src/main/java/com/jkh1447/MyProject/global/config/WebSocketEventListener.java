@@ -10,12 +10,14 @@ import com.jkh1447.MyProject.service.chating.ChatRoomService;
 import com.jkh1447.MyProject.service.chating.ChatMessageSenderService;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.stereotype.Component;
-import com.jkh1447.MyProject.dto.chating.ParticipantDto;
+import com.jkh1447.MyProject.dto.chating.ParticipantsDto;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Component
-@RequiredArgsConstructor    
+@RequiredArgsConstructor
 public class WebSocketEventListener {
 
     private final ChatRoomService chatRoomService;
@@ -25,14 +27,16 @@ public class WebSocketEventListener {
     @EventListener
     public void handleWebSocketDisconnectListener(SessionDisconnectEvent event) {
         StompHeaderAccessor headerAccessor = StompHeaderAccessor.wrap(event.getMessage());
-
+        log.info("연결 끊어짐: {}", headerAccessor.getSessionAttributes());
         String roomId = (String) headerAccessor.getSessionAttributes().get("roomId");
         String userId = (String) headerAccessor.getSessionAttributes().get("userId");
         String nickname = (String) headerAccessor.getSessionAttributes().get("nickname");
 
-        if(roomId != null && userId != null) {
+        if (roomId != null && userId != null) {
             // 채팅방에서 제거
             chatRoomService.removeParticipant(roomId, userId);
+
+            log.info("채팅방에서 제거: 유저 {}, 방 {}", userId, roomId);
 
             chatMessageSenderService.sendLeaveMessage(roomId, userId, nickname);
 
@@ -42,6 +46,6 @@ public class WebSocketEventListener {
             headerAccessor.getSessionAttributes().remove("roomId");
             headerAccessor.getSessionAttributes().remove("nickname");
         }
-        
+
     }
 }
