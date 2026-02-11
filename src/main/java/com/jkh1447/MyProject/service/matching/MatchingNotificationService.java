@@ -3,6 +3,7 @@ package com.jkh1447.MyProject.service.matching;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import com.jkh1447.MyProject.dto.matching.MatchCompleteResponse;
+import com.jkh1447.MyProject.dto.matching.MatchDeclineResponse;
 import com.jkh1447.MyProject.dto.matching.MatchFoundResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -48,6 +49,19 @@ public class MatchingNotificationService {
             userId,
             MatchingConstants.SUB_MOVE_ROOM_PATH,
             matchCompleteResponse
+        );
+    }
+
+    public void sendDeclineMatch(String userId, String matchId, MatchDeclineResponse.Status status) {
+        MatchDeclineResponse matchDeclineResponse = MatchDeclineResponse.builder()
+            .matchId(matchId)
+            .status(status)
+            .build();
+
+        messagingTemplate.convertAndSendToUser(
+            userId,
+            MatchingConstants.SUB_MATCH_DECLINE_PATH,
+            matchDeclineResponse
         );
     }
 }

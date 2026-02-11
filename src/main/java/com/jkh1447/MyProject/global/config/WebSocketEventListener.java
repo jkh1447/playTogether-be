@@ -11,6 +11,7 @@ import com.jkh1447.MyProject.service.chating.ChatMessageSenderService;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.stereotype.Component;
 import com.jkh1447.MyProject.dto.chating.ParticipantsDto;
+import com.jkh1447.MyProject.service.matching.MatchingService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,6 +23,7 @@ public class WebSocketEventListener {
 
     private final ChatRoomService chatRoomService;
     private final ChatMessageSenderService chatMessageSenderService;
+    private final MatchingService matchingService;
 
     // 웹소켓 연결이 끊어졌을 때 실행(비정상 종료, 브라우저 종료)
     @EventListener
@@ -31,6 +33,12 @@ public class WebSocketEventListener {
         String roomId = (String) headerAccessor.getSessionAttributes().get("roomId");
         String userId = (String) headerAccessor.getSessionAttributes().get("userId");
         String nickname = (String) headerAccessor.getSessionAttributes().get("nickname");
+
+        log.info("이 세션의 유저 id: {}", userId);
+
+        if (userId != null) {
+            matchingService.removeUserFromQueue(userId); // 조건 체크없어도 됨
+        }
 
         if (roomId != null && userId != null) {
             // 채팅방에서 제거

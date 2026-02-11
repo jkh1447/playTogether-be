@@ -34,8 +34,15 @@ public class StompHandler implements ChannelInterceptor {
             return message;
         }
         String destination = accessor.getDestination();
+        
+        // 소켓 연결 메세지인 경우
+        if(StompCommand.CONNECT.equals(accessor.getCommand())) {
+            String userId = accessor.getFirstNativeHeader("userId");
+            accessor.getSessionAttributes().put("userId", userId);
+            log.info("소켓 연결: {}", userId);
+        }
         // 구독 메세지인 경우
-        if (StompCommand.SUBSCRIBE.equals(accessor.getCommand())
+        else if (StompCommand.SUBSCRIBE.equals(accessor.getCommand())
                 && destination.startsWith(ChatingConstants.SUB_ROOM_PATH)) {
             handleSubscribe(accessor);
         } else if (StompCommand.UNSUBSCRIBE.equals(accessor.getCommand())) {
@@ -45,15 +52,13 @@ public class StompHandler implements ChannelInterceptor {
     }
 
     private void handleSubscribe(StompHeaderAccessor accessor) {
-        String userId = accessor.getFirstNativeHeader("userId");
         String roomId = accessor.getFirstNativeHeader("roomId");
         String nickname = accessor.getFirstNativeHeader("nickname");
 
         if (accessor.getSessionAttributes() != null) {
-            accessor.getSessionAttributes().put("userId", userId);
             accessor.getSessionAttributes().put("roomId", roomId);
             accessor.getSessionAttributes().put("nickname", nickname);
-            log.info("세션 정보 저장 완료: 유저 {}, 방 {}", userId, roomId);
+            log.info("세션 정보 저장 완료: 방 {}", roomId);
         }
     }
 

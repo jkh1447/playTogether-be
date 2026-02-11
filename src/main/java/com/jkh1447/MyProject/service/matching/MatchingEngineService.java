@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import com.jkh1447.MyProject.domain.auth.AuthConstants;
 import com.jkh1447.MyProject.domain.matching.MatchingConstants;
 import com.jkh1447.MyProject.service.users.UsersService;
+import com.jkh1447.MyProject.service.matching.MatchingService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -23,6 +24,7 @@ public class MatchingEngineService {
     private final RedisTemplate<String, Object> redisTemplate;
     private final UsersService usersService;
     private final MatchingNotificationService notificationService;
+    private final MatchingService matchingService;
     
     public void processMatching() {
         Set<Object> activeQueues =
@@ -57,7 +59,7 @@ public class MatchingEngineService {
 
     private void matchTeam(String queueKey, int groupSize) {
         log.info("[Match Attempt] Queue: {}, Required GroupSize: {}", queueKey, groupSize);
-        Set<ZSetOperations.TypedTuple<Object>> teamMembers =
+        Set<ZSetOperations.TypedTuple<Object>> teamMembers = // 큐에서 빼기
                 redisTemplate.opsForZSet().popMin(queueKey, groupSize);
         
         // 찰나에 사용자가 종료했을때
@@ -68,7 +70,11 @@ public class MatchingEngineService {
 
         if (teamMembers != null && teamMembers.size() == groupSize) {
             List<String> userIds =
-                    teamMembers.stream().map(tuple -> (String) tuple.getValue()).toList();
+                    teamMembers.stream().map(tuple -> {
+                        String userId = (String) tuple.getValue();
+                        matchingService.removeUserFromQueue(userId); // user:status에서 제거
+                        return userId;
+                    }).toList();
 
             // 현재는 알림이 없으므로 로그로 확인
             log.info("========================================");

@@ -13,7 +13,7 @@ public class MatchingKeyGenerator {
 
     public String generateKey(MatchingRequest matchingRequest) {
 
-        String groupSize = matchingRequest.filters().getOrDefault(MatchingConstants.MATCH_GROUP_SIZE, "2");
+        String groupSize = matchingRequest.filters().getOrDefault(MatchingConstants.MATCH_GROUP_SIZE, "3");
 
         String filterPart = matchingRequest.filters().entrySet().stream()
                 .filter(entry -> !entry.getKey().equals(MatchingConstants.MATCH_GROUP_SIZE))
