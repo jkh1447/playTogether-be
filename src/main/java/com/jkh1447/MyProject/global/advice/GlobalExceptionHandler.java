@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpStatus;
 import com.jkh1447.MyProject.domain.auth.exception.TokenException;
 import com.jkh1447.MyProject.domain.auth.exception.TokenExpiredException;
+import com.jkh1447.MyProject.domain.matching.exception.InvalidStringFormatException;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -69,5 +70,13 @@ public class GlobalExceptionHandler {
     public ResponseEntity<String> handleAllException(Exception e) {
         log.error("서버 내부 오류 발생: {}", e.getMessage(), e);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("서버 내부 오류가 발생했습니다.");
+    }
+
+    @ExceptionHandler(InvalidStringFormatException.class)
+    public ResponseEntity<ApiResponse<?>> handleInvalidStringFormatException(InvalidStringFormatException e) {
+
+        log.error("잘못된 문자열 형식: {}", e.getMessage(), e);
+
+        return ResponseEntity.status(e.getHttpStatus()).body(ApiResponse.fail(e.getHttpStatus().name(), ""));
     }
 }

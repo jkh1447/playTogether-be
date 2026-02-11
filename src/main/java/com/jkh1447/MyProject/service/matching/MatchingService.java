@@ -145,9 +145,10 @@ public class MatchingService {
         String participantsStr = (String) redisTemplate.opsForHash().get(statusKey,
                 MatchingConstants.MATCH_PARTICIPANTS_DATA);
 
-        String queueKey = (String) redisTemplate.opsForHash().get(statusKey, MatchingConstants.MATCH_QUEUE_KEY);
+        String queueKey = (String) redisTemplate.opsForHash().get(statusKey,
+                MatchingConstants.MATCH_QUEUE_KEY);
 
-        Boolean isMatchStatusExist = redisTemplate.delete(statusKey); 
+        Boolean isMatchStatusExist = redisTemplate.delete(statusKey);
         if (Boolean.FALSE.equals(isMatchStatusExist)) {
             log.info("이미 거절된 매칭입니다.");
             return;
@@ -158,13 +159,14 @@ public class MatchingService {
             String[] parts = participant.split(":");
             String currentUserId = parts[0];
             String currentScore = parts[1];
-            if (parts.length < 2) continue; // 데이터 형식 오류 방지
+            if (parts.length < 2)
+                continue; // 데이터 형식 오류 방지
             if (currentUserId.equals(userId)) {
-                notificationService.sendDeclineMatch(currentUserId, matchId, MatchDeclineResponse.Status.REJECTED);
-            }
-            else 
-            {
-                notificationService.sendDeclineMatch(currentUserId, matchId, MatchDeclineResponse.Status.CANCELLED);
+                notificationService.sendDeclineMatch(currentUserId, matchId,
+                        MatchDeclineResponse.Status.REJECTED);
+            } else {
+                notificationService.sendDeclineMatch(currentUserId, matchId,
+                        MatchDeclineResponse.Status.CANCELLED);
                 rejoinQueue(currentUserId, queueKey, currentScore);
             }
 

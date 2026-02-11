@@ -11,6 +11,6 @@ public record ParticipantsDto(String type, List<ParticipantInfo> participants) {
     }
 
     public static ParticipantsDto createParticipantDto(List<ParticipantInfo> participants) {
-        return ParticipantsDto.builder().type("PARTICIPANT").participants(participants).build();
+        return ParticipantsDto.builder().type(ChatingConstants.MESSAGE_TYPE_PARTICIPANTS).participants(participants).build();
     }
 }

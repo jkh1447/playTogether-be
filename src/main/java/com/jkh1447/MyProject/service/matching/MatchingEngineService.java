@@ -25,7 +25,7 @@ public class MatchingEngineService {
     private final UsersService usersService;
     private final MatchingNotificationService notificationService;
     private final MatchingService matchingService;
-    
+
     public void processMatching() {
         Set<Object> activeQueues =
                 redisTemplate.opsForSet().members(MatchingConstants.ACTIVE_QUEUES_KEY);
@@ -61,7 +61,7 @@ public class MatchingEngineService {
         log.info("[Match Attempt] Queue: {}, Required GroupSize: {}", queueKey, groupSize);
         Set<ZSetOperations.TypedTuple<Object>> teamMembers = // 큐에서 빼기
                 redisTemplate.opsForZSet().popMin(queueKey, groupSize);
-        
+
         // 찰나에 사용자가 종료했을때
         if (teamMembers == null || teamMembers.size() < groupSize) {
             // 구현해야 함
@@ -69,12 +69,11 @@ public class MatchingEngineService {
         }
 
         if (teamMembers != null && teamMembers.size() == groupSize) {
-            List<String> userIds =
-                    teamMembers.stream().map(tuple -> {
-                        String userId = (String) tuple.getValue();
-                        matchingService.removeUserFromQueue(userId); // user:status에서 제거
-                        return userId;
-                    }).toList();
+            List<String> userIds = teamMembers.stream().map(tuple -> {
+                String userId = (String) tuple.getValue();
+                matchingService.removeUserFromQueue(userId); // user:status에서 제거
+                return userId;
+            }).toList();
 
             // 현재는 알림이 없으므로 로그로 확인
             log.info("========================================");
@@ -97,30 +96,31 @@ public class MatchingEngineService {
         cleanEmptyQueue(queueKey);
     }
 
-    private void createMatchStatus(String statusKey, int groupSize, String queueKey, Set<ZSetOperations.TypedTuple<Object>> teamMembers) {
+    private void createMatchStatus(String statusKey, int groupSize, String queueKey,
+            Set<ZSetOperations.TypedTuple<Object>> teamMembers) {
         /*
-        * 매칭 상태를 저장하기 위한 Map
-        */
+         * 매칭 상태를 저장하기 위한 Map
+         */
         Map<String, Object> matchStatus = new HashMap<>();
 
         // 매칭 취소시 큐 복귀를 위한 스코어 저장
-        List<String> userWithScores = teamMembers.stream()
-                .map(tuple -> {
-                    String userId = (String)tuple.getValue();
-                    double score = tuple.getScore();
-                    String nickname;
+        List<String> userWithScores = teamMembers.stream().map(tuple -> {
+            String userId = (String) tuple.getValue();
+            double score = tuple.getScore();
+            String nickname;
 
-                    if (userId != null && userId.startsWith(AuthConstants.GUEST_TOKEN_PREFIX)) {
-                        String guestIdPart = userId.split("_")[1].substring(0, 4);
-                        nickname = AuthConstants.GUEST_NICKNAME_PREFIX + guestIdPart;
-                    } else {
-                        nickname = usersService.getNickname(Long.parseLong(userId));
-                    }
+            if (userId != null && userId.startsWith(AuthConstants.GUEST_TOKEN_PREFIX)) {
+                String guestIdPart = userId.split("_")[1].substring(0, 4);
+                nickname = AuthConstants.GUEST_NICKNAME_PREFIX + guestIdPart;
+            } else {
+                nickname = usersService.getNickname(Long.parseLong(userId));
+            }
 
-                    return userId + ":" + score + ":" + nickname;
-                }).toList();
+            return userId + ":" + score + ":" + nickname;
+        }).toList();
 
-        String participantsData = String.join(",", userWithScores); // "userId : score : nickname, ..."
+        String participantsData = String.join(",", userWithScores); // "userId : score : nickname,
+                                                                    // ..."
 
 
         matchStatus.put(MatchingConstants.MATCH_GROUP_SIZE, groupSize);
