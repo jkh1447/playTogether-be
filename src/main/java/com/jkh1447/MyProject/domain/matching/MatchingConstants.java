@@ -23,4 +23,6 @@ public class MatchingConstants {
     public static final String MATCH_ACCEPTED_PREFIX = "user:";
 
     public static final long ROOM_EXPIRE_SECONDS = 60 * 60 * 24; // 24 시간
+    public static final int MATCH_STATUS_EXPIRE_SECONDS = 60; // 1 분
+    public static final int MATCH_TIMEOUT_SECONDS = 11; // 11초
 }

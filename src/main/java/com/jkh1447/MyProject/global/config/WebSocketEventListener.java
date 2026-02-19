@@ -37,7 +37,7 @@ public class WebSocketEventListener {
         log.info("이 세션의 유저 id: {}", userId);
 
         if (userId != null) {
-            matchingService.removeUserFromQueue(userId); // 조건 체크없어도 됨
+            matchingService.removeUserFromQueue(userId); // 큐 돌리는 도중 비정상 종료된 유저를 큐에서 제거
         }
 
         if (roomId != null && userId != null) {

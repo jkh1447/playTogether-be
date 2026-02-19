@@ -57,7 +57,7 @@ public class SecurityConfig {
                         }))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/signup", "/api/auth/login", "/api/auth/guest", "/api/auth/logout", "/api/auth/refresh", "/api/users/me").permitAll() // 회원가입, 로그인
-                        .requestMatchers("/oauth2/**", "/login/oauth2/**").permitAll()
+                        .requestMatchers("/oauth2/**", "/login/oauth2/**", "/api/gameInfo/**").permitAll()
                         .anyRequest().authenticated() // 나머지는 토큰이 있어야 함
                 )
                 .oauth2Login(oauth -> oauth

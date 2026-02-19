@@ -25,6 +25,11 @@ public class RoomService {
     
     private final RedisTemplate<String, Object> redisTemplate;
 
+    /*
+     * roomStatus 생성
+     * 참가자들에게 방 이동 알림
+     */
+
     public void createRoom(String roomId, List<MatchParticipant> participants) {
         String roomStatusKey = buildRoomStatusKey(roomId);
 

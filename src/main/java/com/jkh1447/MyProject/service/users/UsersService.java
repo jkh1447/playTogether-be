@@ -4,7 +4,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import lombok.RequiredArgsConstructor;
 import com.jkh1447.MyProject.repository.user.UserRepository;
-import com.jkh1447.MyProject.dto.users.UserResponse;
+import com.jkh1447.MyProject.dto.users.UserInfoResponse;
 import com.jkh1447.MyProject.domain.users.Users;
 import com.jkh1447.MyProject.domain.users.exception.UserException;
 import com.jkh1447.MyProject.domain.users.exception.UserErrorCode;
@@ -16,9 +16,9 @@ public class UsersService {
 
     private final UserRepository userRepository;
 
-    public UserResponse getMyInfo(Long userId) {
+    public UserInfoResponse getMyInfo(Long userId) {
         Users user = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException());
-        return UserResponse.from(user);
+        return UserInfoResponse.from(user);
     }
 
     public String getNickname(Long userId) {

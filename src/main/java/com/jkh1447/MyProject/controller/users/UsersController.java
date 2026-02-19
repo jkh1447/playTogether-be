@@ -10,7 +10,7 @@ import com.jkh1447.MyProject.service.users.UsersService;
 import com.jkh1447.MyProject.domain.auth.AuthConstants;
 import com.jkh1447.MyProject.domain.auth.Role;
 import com.jkh1447.MyProject.domain.users.Users;
-import com.jkh1447.MyProject.dto.users.UserResponse;
+import com.jkh1447.MyProject.dto.users.UserInfoResponse;
 import java.util.Map;
 import org.springframework.http.HttpStatus;
 import com.jkh1447.MyProject.global.response.ApiResponse;
@@ -34,7 +34,7 @@ public class UsersController {
         log.info("name: {}", name);
         if(name.startsWith(AuthConstants.GUEST_TOKEN_PREFIX)) { // 게스트인 경우
             String guestIdPart = name.split("_")[1].substring(0, 4);
-            UserResponse response = UserResponse.builder()
+            UserInfoResponse response = UserInfoResponse.builder()
                     .role(Role.GUEST)
                     .nickname(AuthConstants.GUEST_NICKNAME_PREFIX + guestIdPart)
                     .userId(authentication.getName())
@@ -43,7 +43,7 @@ public class UsersController {
         }
         Long userId = Long.parseLong(name);
         
-        UserResponse response = usersService.getMyInfo(userId);
+        UserInfoResponse response = usersService.getMyInfo(userId);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 

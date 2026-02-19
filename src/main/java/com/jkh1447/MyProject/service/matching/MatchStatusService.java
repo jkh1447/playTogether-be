@@ -24,7 +24,7 @@ public class MatchStatusService {
      * Redis Hash 구조 
      * 1. Match Status // 큐가 잡혔을 때 그 매치의 상태들을 저장
      * Key: {matchId}
-     * Value: {groupSize:int, acceptCount:int, participants:String, queueKey:String}
+     * Value: {groupSize:int, acceptCount:int, participants:String, queueKey:String} + {userId+{userId}:"ACCEPTED"}(수락시 생성)
      */
 
     private final RedisTemplate<String, Object> redisTemplate;
@@ -41,7 +41,7 @@ public class MatchStatusService {
         matchStatus.put(MatchingConstants.MATCH_QUEUE_KEY, matchStatusInfo.queueKey());
 
         redisTemplate.opsForHash().putAll(statusKey, matchStatus);
-        redisTemplate.expire(statusKey, Duration.ofSeconds(expireSeconds));
+        redisTemplate.expire(statusKey, Duration.ofSeconds(expireSeconds)); // matchStatus만료시간
 
         log.info("[매칭 상태 생성] matchId: {}, groupSize: {}, participants: {}",  matchId,
                 matchStatusInfo.groupSize(), matchStatusInfo.getParticipantIds());
@@ -53,15 +53,25 @@ public class MatchStatusService {
 
     public MatchStatusInfo getMatchStatus(String matchId) {
         String statusKey = buildStatusKey(matchId);
+        Map<Object, Object> entries = redisTemplate.opsForHash().entries(statusKey);
+        if(entries == null || entries.isEmpty()) {
+            return null;
+        }
 
-        Object rawGroupSize =
-                redisTemplate.opsForHash().get(statusKey, MatchingConstants.MATCH_GROUP_SIZE);
-        Object rawAcceptCount =
-                redisTemplate.opsForHash().get(statusKey, MatchingConstants.MATCH_ACCEPT_COUNT);
-        String participantsData = (String) redisTemplate.opsForHash().get(statusKey,
-                MatchingConstants.MATCH_PARTICIPANTS_DATA);
-        String queueKey = (String) redisTemplate.opsForHash().get(statusKey,
-                MatchingConstants.MATCH_QUEUE_KEY);
+
+        Object rawGroupSize = entries.get(MatchingConstants.MATCH_GROUP_SIZE);
+        Object rawAcceptCount = entries.get(MatchingConstants.MATCH_ACCEPT_COUNT);
+        String participantsData = (String) entries.get(MatchingConstants.MATCH_PARTICIPANTS_DATA);
+        String queueKey = (String) entries.get(MatchingConstants.MATCH_QUEUE_KEY);
+        
+        Map<String, String> acceptedUsers = new HashMap<>();
+        
+        entries.forEach((key, value) -> {
+            if (key.toString().startsWith(MatchingConstants.MATCH_ACCEPTED_PREFIX)) {
+                acceptedUsers.put(key.toString(), value.toString());
+            }
+        });
+        
 
         if (rawGroupSize == null || participantsData == null) {
             return null;
@@ -72,7 +82,7 @@ public class MatchStatusService {
         List<MatchParticipant> participants = parseParticipants(participantsData);
 
         return MatchStatusInfo.builder().groupSize(groupSize).acceptCount(acceptCount)
-                .participants(participants).queueKey(queueKey).build();
+                .participants(participants).queueKey(queueKey).acceptedUsers(acceptedUsers).build();
     }
 
     private List<MatchParticipant> parseParticipants(String participantsData) {

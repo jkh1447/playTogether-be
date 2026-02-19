@@ -15,18 +15,13 @@ import com.jkh1447.MyProject.global.response.ApiResponse;
 import com.jkh1447.MyProject.security.JwtUtil;
 import com.jkh1447.MyProject.service.auth.AuthService;
 import com.jkh1447.MyProject.domain.auth.AuthConstants;
-import com.jkh1447.MyProject.domain.auth.exception.AuthErrorCode;
 import com.jkh1447.MyProject.domain.auth.exception.RefreshTokenNotFoundFromCooKie;
 import com.jkh1447.MyProject.dto.auth.TokenDto;
-import com.jkh1447.MyProject.dto.auth.UserLoginRequestDto;
-import com.jkh1447.MyProject.dto.auth.UserSignupRequestDto;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.HttpHeaders;
-import java.util.Map;
-import java.util.HashMap;
+import org.springframework.http.HttpStatus;
 
 @Slf4j
 @RestController

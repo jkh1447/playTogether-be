@@ -1,18 +1,18 @@
 package com.jkh1447.MyProject.service.matching;
 
-import java.time.Duration;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Service;
-import com.jkh1447.MyProject.domain.auth.AuthConstants;
 import com.jkh1447.MyProject.domain.matching.MatchingConstants;
-import com.jkh1447.MyProject.service.users.UsersService;
-import com.jkh1447.MyProject.service.matching.MatchingService;
+import com.jkh1447.MyProject.dto.matching.MatchDeclineResponse;
+import com.jkh1447.MyProject.dto.matching.MatchParticipant;
+import com.jkh1447.MyProject.dto.matching.QueueInfo;
+import com.jkh1447.MyProject.dto.matching.MatchStatusInfo;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -22,9 +22,11 @@ import lombok.extern.slf4j.Slf4j;
 public class MatchingEngineService {
 
     private final RedisTemplate<String, Object> redisTemplate;
-    private final UsersService usersService;
     private final MatchingNotificationService notificationService;
-    private final MatchingService matchingService;
+    private final MatchQueueService queueService;
+    private final UserInfoHelper userInfoHelper;
+    private final MatchStatusService matchStatusService;
+    private final ScheduledExecutorService matchTimeoutExecutor;
 
     public void processMatching() {
         Set<Object> activeQueues =
@@ -36,111 +38,125 @@ public class MatchingEngineService {
 
         for (Object queueKeyObj : activeQueues) {
             String queueKey = (String) queueKeyObj;
-            int groupSize = extractSizeFromKey(queueKey);
-
-            Long currentSize = redisTemplate.opsForZSet().size(queueKey);
-
-            if (currentSize != null && currentSize >= groupSize) {
-                matchTeam(queueKey, groupSize);
-            }
+            processQueue(queueKey);
         }
     }
 
-    private int extractSizeFromKey(String queueKey) {
+    private void processQueue(String queueKey) { // 매칭
         try {
-            String[] parts = queueKey.split(":");
-            String sizePart = parts[2];
-            return Integer.parseInt(sizePart.split("=")[1]);
+            QueueInfo queueInfo = QueueInfo.fromQueueKey(queueKey);
+            Long currentQueueSize = queueService.getQueueSize(queueKey);
+
+            if (currentQueueSize != null && currentQueueSize >= queueInfo.groupSize()) {
+                attemptMatch(queueKey, queueInfo);
+            }
         } catch (Exception e) {
-            log.error("Failed to extract size from key: {}", queueKey, e);
-            return 999;
+            log.error("[매칭 처리 오류] queueKey: {}", queueKey, e);
         }
     }
 
-    private void matchTeam(String queueKey, int groupSize) {
-        log.info("[Match Attempt] Queue: {}, Required GroupSize: {}", queueKey, groupSize);
+    private void attemptMatch(String queueKey, QueueInfo queueInfo) {
+
+        log.info("[매칭 시도] queue: {}, 필요 인원: {}", queueKey, queueInfo.groupSize());
         Set<ZSetOperations.TypedTuple<Object>> teamMembers = // 큐에서 빼기
-                redisTemplate.opsForZSet().popMin(queueKey, groupSize);
+                redisTemplate.opsForZSet().popMin(queueKey, queueInfo.groupSize());
 
         // 찰나에 사용자가 종료했을때
-        if (teamMembers == null || teamMembers.size() < groupSize) {
+        if (teamMembers == null || teamMembers.size() < queueInfo.groupSize()) {
             // 구현해야 함
             return;
         }
 
-        if (teamMembers != null && teamMembers.size() == groupSize) {
-            List<String> userIds = teamMembers.stream().map(tuple -> {
-                String userId = (String) tuple.getValue();
-                matchingService.removeUserFromQueue(userId); // user:status에서 제거
-                return userId;
-            }).toList();
-
-            // 현재는 알림이 없으므로 로그로 확인
-            log.info("========================================");
-            log.info("🎯 [매칭 성공!] 게임: {}", queueKey.split(":")[1]);
-            log.info("👥 팀원 명단: {}", userIds);
-            log.info("========================================");
-
-            String matchId = UUID.randomUUID().toString();
-            String statusKey = MatchingConstants.MATCH_STATUS_KEY + matchId;
-
-            createMatchStatus(statusKey, groupSize, queueKey, teamMembers);
-
-            for (String userId : userIds) {
-                notificationService.sendMatchFound(userId, matchId);
-            }
-
-        }
+        String matchId = createMatch(queueKey, queueInfo, teamMembers);
 
         // 큐에 남은 사람이 없다면 해당 큐를 제거, 만약에 매칭이 취소된다면 큐가 없다면 다시 만드는 로직이 필요
-        cleanEmptyQueue(queueKey);
-    }
+        queueService.cleanQueueIfEmpty(queueKey);
 
-    private void createMatchStatus(String statusKey, int groupSize, String queueKey,
-            Set<ZSetOperations.TypedTuple<Object>> teamMembers) {
-        /*
-         * 매칭 상태를 저장하기 위한 Map
-         */
-        Map<String, Object> matchStatus = new HashMap<>();
-
-        // 매칭 취소시 큐 복귀를 위한 스코어 저장
-        List<String> userWithScores = teamMembers.stream().map(tuple -> {
-            String userId = (String) tuple.getValue();
-            double score = tuple.getScore();
-            String nickname;
-
-            if (userId != null && userId.startsWith(AuthConstants.GUEST_TOKEN_PREFIX)) {
-                String guestIdPart = userId.split("_")[1].substring(0, 4);
-                nickname = AuthConstants.GUEST_NICKNAME_PREFIX + guestIdPart;
-            } else {
-                nickname = usersService.getNickname(Long.parseLong(userId));
+        matchTimeoutExecutor.schedule(() -> {
+            try{
+                processMatchTimeout(matchId);        
+            } catch (Exception e) {
+                log.error("[매칭 타임아웃 스케줄링 오류] queueKey: {}, 오류: {}", queueKey, e.getMessage());
             }
-
-            return userId + ":" + score + ":" + nickname;
-        }).toList();
-
-        String participantsData = String.join(",", userWithScores); // "userId : score : nickname,
-                                                                    // ..."
-
-
-        matchStatus.put(MatchingConstants.MATCH_GROUP_SIZE, groupSize);
-        matchStatus.put(MatchingConstants.MATCH_ACCEPT_COUNT, 0);
-        matchStatus.put(MatchingConstants.MATCH_PARTICIPANTS_DATA, participantsData);
-        matchStatus.put(MatchingConstants.MATCH_QUEUE_KEY, queueKey); // 매칭 취소시 복귀를 위함
-
-        log.info("[Redis Write] Key: {}, Data: {}", statusKey, matchStatus);
-
-        redisTemplate.opsForHash().putAll(statusKey, matchStatus);
-
-        redisTemplate.expire(statusKey, Duration.ofSeconds(15));
-        log.info("[Redis Expire] Key: {} set for 15s", statusKey);
+        }, MatchingConstants.MATCH_TIMEOUT_SECONDS, TimeUnit.SECONDS);
     }
 
-    private void cleanEmptyQueue(String queueKey) {
-        Long remaining = redisTemplate.opsForZSet().size(queueKey);
-        if (remaining == null || remaining == 0) {
-            redisTemplate.opsForSet().remove(MatchingConstants.ACTIVE_QUEUES_KEY, queueKey);
+    private void processMatchTimeout(String matchId){
+        String statusKey = MatchingConstants.MATCH_STATUS_KEY + matchId;
+        MatchStatusInfo matchStatusInfo = matchStatusService.getMatchStatus(matchId);
+        
+        if (Boolean.FALSE.equals(redisTemplate.delete(statusKey))) {
+            // 이미 매칭이 처리된 경우 (거절 or 성사)
+            // 동시성 방지
+            return;
         }
 
+        if (matchStatusInfo == null) {
+            log.warn("[매칭 상태 없음] matchId: {}", matchId);
+            return;
+        }
+
+
+        for(MatchParticipant participant : matchStatusInfo.participants()) {
+            if(matchStatusInfo.isAcceptedUser(participant.userId())) {
+                notificationService.sendDeclineMatch(participant.userId(), matchId,
+                        MatchDeclineResponse.Status.CANCELLED);
+                queueService.rejoinQueue(participant.userId(), matchStatusInfo.queueKey(), participant.score());
+            }
+            else {
+                notificationService.sendDeclineMatch(participant.userId(), matchId,
+                        MatchDeclineResponse.Status.REJECTED);
+            }
+        }
+
+        log.info("========================================");
+        log.info("🎯 [매칭 타임아웃] 게임: {}", matchStatusInfo.queueKey());
+        log.info("👥 팀원: {}", matchStatusInfo.participants().stream().map(MatchParticipant::nickname).toList());
+        log.info("🆔 matchId: {}", matchId);
+        log.info("========================================");
+
+    }
+
+    private String createMatch(String queueKey, QueueInfo queueInfo, Set<ZSetOperations.TypedTuple<Object>> teamMembers) {
+        
+        List<MatchParticipant> participants = teamMembers.stream().map(this::createParticipant).toList();
+
+        participants.forEach(p -> queueService.removeUserCompletely(p.userId())); // user queue status���� ��嫄�
+
+        String matchId = UUID.randomUUID().toString();
+        
+        MatchStatusInfo matchStatusInfo = MatchStatusInfo.builder()
+                .groupSize(queueInfo.groupSize())
+                .acceptCount(0)
+                .participants(participants)
+                .queueKey(queueKey)
+                .build();
+        matchStatusService.createMatchStatus(matchId, matchStatusInfo, MatchingConstants.MATCH_STATUS_EXPIRE_SECONDS);
+
+        for (MatchParticipant participant : participants) {
+            notificationService.sendMatchFound(participant.userId(), matchId);
+        }
+
+        log.info("========================================");
+        log.info("🎯 [매칭 성공] 게임: {}", queueInfo.gameName());
+        log.info("👥 팀원: {}", participants.stream().map(MatchParticipant::nickname).toList());
+        log.info("🆔 matchId: {}", matchId);
+        log.info("========================================");
+
+        return matchId;
+    }
+
+    private MatchParticipant createParticipant(ZSetOperations.TypedTuple<Object> tuple) {
+        String userId = (String) tuple.getValue();
+        double score = tuple.getScore();
+        String nickname = userInfoHelper.getNickname(userId);
+
+
+        return MatchParticipant.builder()
+                .userId(userId)
+                .score(score)
+                .nickname(nickname)
+                .build();
     }
 }
+    

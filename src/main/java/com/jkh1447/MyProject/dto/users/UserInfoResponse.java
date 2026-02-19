@@ -5,12 +5,12 @@ import lombok.Builder;
 import com.jkh1447.MyProject.domain.auth.Role;
 
 @Builder
-public record UserResponse(
+public record UserInfoResponse(
     String nickname,
     Role role,
     String userId
 ) {
-    public static UserResponse from(Users user) {
-        return new UserResponse(user.getNickname(), user.getRole(), user.getId().toString());
+    public static UserInfoResponse from(Users user) {
+        return new UserInfoResponse(user.getNickname(), user.getRole(), user.getId().toString());
     }
 }
