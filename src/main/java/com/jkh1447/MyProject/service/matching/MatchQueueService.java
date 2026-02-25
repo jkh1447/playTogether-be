@@ -7,7 +7,20 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import java.util.Map;
 import java.util.stream.Collectors;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ZSetOperations;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.jkh1447.MyProject.dto.matching.QueueUser;
+import java.util.List;
+import java.util.Set;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Collection;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
+import org.springframework.data.redis.core.script.RedisScript;
 
 @Slf4j
 @Service
@@ -29,27 +42,47 @@ public class MatchQueueService {
      * 1. User Queue Status // 유저가 어느 큐에 현재 있는가?
      * Key: user:queue:status
      * Value: {userId:queueKey}
+     * 
+     * 2. User Queue Infos // 유저가 어느 큐에 현재 있는가?
+     * Key: user:queue:infos
+     * Value: {userId:queueInfos}
      */
     
     private final RedisTemplate<String, Object> redisTemplate;
+    private final ObjectMapper objectMapper;
+
+    private final RedisScript<Long> removeUserFromQueueScript;
+    private final RedisScript<Long> removeUsersFromQueueScript;
     
-    public void addToQueue(String userId, String queueKey) {
+    public void addToQueue(String userId, String queueKey, String queueUserInfos) {
         double score = System.currentTimeMillis();
 
         redisTemplate.opsForZSet().add(queueKey, userId, score);
-        redisTemplate.opsForHash().put(MatchingConstants.USER_QUEUE_STATUS_KEY, userId, queueKey);
+        redisTemplate.opsForHash().put(MatchingConstants.USER_QUEUE_STATUS_KEY, userId, queueKey); // 유저가 어느 큐에 있는지 저장
+        redisTemplate.opsForHash().put(MatchingConstants.USER_QUEUE_INFOS_KEY, userId, queueUserInfos); // 유저의 큐에 대한 정보(필터) 저장
         redisTemplate.opsForSet().add(MatchingConstants.ACTIVE_QUEUES_KEY, queueKey);
 
         log.info("[큐 참여] userId: {}, queue: {}", userId, queueKey);
     }   
 
-    public void removeFromQueue(String userId, String queueKey) {
-        redisTemplate.opsForZSet().remove(queueKey, userId);
-        redisTemplate.opsForHash().delete(MatchingConstants.USER_QUEUE_STATUS_KEY, userId);
+    public void removeUserFromQueue(String userId, String queueKey) {
+
+        List<String> keys = List.of(queueKey, MatchingConstants.USER_QUEUE_STATUS_KEY, MatchingConstants.USER_QUEUE_INFOS_KEY);
         
-        cleanQueueIfEmpty(queueKey);
+        redisTemplate.execute(removeUserFromQueueScript, keys, userId);
 
         log.info("[큐 나감] userId: {}, queue: {}", userId, queueKey);
+    }
+
+
+    public Long removeUsersFromQueue(List<QueueUser> team, String queueKey) {
+        List<String> userIds = team.stream().map(QueueUser::getUserId).collect(Collectors.toList());
+
+        List<String> keys = List.of(queueKey, MatchingConstants.USER_QUEUE_STATUS_KEY, MatchingConstants.USER_QUEUE_INFOS_KEY);
+
+        log.info("[큐에서 유저들 제거] 유저: {}", userIds);
+        
+        return redisTemplate.execute(removeUsersFromQueueScript, keys, userIds.toArray());
     }
 
     public void cleanQueueIfEmpty(String queueKey) {
@@ -74,7 +107,7 @@ public class MatchQueueService {
     public void removeUserCompletely(String userId) {
         String queueKey = getUserQueue(userId);
         if (queueKey != null) {
-            removeFromQueue(userId, queueKey);
+            removeUserFromQueue(userId, queueKey);
         }
     }
 
@@ -97,4 +130,65 @@ public class MatchQueueService {
         return String.format("%s:%s:groupSize=%s:%s", PREFIX, matchingRequest.gameName(), groupSize,
                 filterPart);
     }
+
+    public Long getQueueGroupSize(String queueKey) {
+        return Long.parseLong(queueKey.split(":")[2].split("=")[1]);
+    }
+
+    public List<QueueUser> loadFromQueue(String queueKey, int limit) {
+        
+        Set<ZSetOperations.TypedTuple<Object>> userIds = redisTemplate.opsForZSet().rangeWithScores(queueKey, 0, limit - 1);
+
+        if(userIds  == null || userIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        List<String> userIdList = new ArrayList<>();
+        Map<String, Double> scoreMap = new HashMap<>(); // {id: score}
+
+        for (ZSetOperations.TypedTuple<Object> tuple : userIds) {
+            String id = String.valueOf(tuple.getValue());
+            userIdList.add(id);
+            scoreMap.put(id, tuple.getScore());
+        }
+
+        List<Object> queueUserInfosJsons = redisTemplate.opsForHash().multiGet(MatchingConstants.USER_QUEUE_INFOS_KEY, (Collection) userIdList);
+
+        List<QueueUser> users = new ArrayList<>();
+        for(int i=0; i<userIdList.size(); i++){
+            String json = (String) queueUserInfosJsons.get(i);
+            
+            if (json == null) {
+                // 도중에 비정상종료 / 브라우저 종료 등에 의해서 큐에서 제거된 유저인 경우
+                continue;
+            }
+
+            try {
+                QueueUser user = objectMapper.readValue(json, QueueUser.class);
+                user.setUserId(userIdList.get(i));
+                user.setQueueKey(queueKey);
+                user.setScore(scoreMap.get(userIdList.get(i)));
+                users.add(user);
+            } catch (Exception e) {
+                // 나중에 전역으로 예외처리하기
+                log.error("QueueUser JSON 파싱 실패: {}", json, e);
+            }
+
+        }
+
+        return users;
+    }
+
+    public List<QueueUser> combineAndSortPool(List<QueueUser> selfUsers, List<QueueUser> anyUsers){
+
+        List<QueueUser> totalPool = new ArrayList<>();
+        totalPool.addAll(selfUsers);
+        totalPool.addAll(anyUsers);
+        
+        totalPool.sort(Comparator.comparing(QueueUser::getScore));
+
+        return totalPool;
+    }
+
+
 }

@@ -1,0 +1,26 @@
+package com.jkh1447.MyProject.dto.matching;
+
+import java.util.HashMap;
+import java.util.Map;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+@Builder
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
+public class QueueUser {
+  private String userId;
+  private String queueKey;
+  private Double score;
+
+  private Map<String, Object> userInfo = new HashMap<>();
+
+  public String getUserInfoString(String key) {
+    return (String) userInfo.getOrDefault(key, "");
+  } 
+}

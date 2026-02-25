@@ -7,11 +7,13 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
+import lombok.RequiredArgsConstructor;
 
 @Converter
+@RequiredArgsConstructor
 public class JsonToMapConverter implements AttributeConverter<List<GameConditionDto>, String> {
 
-  private final ObjectMapper objectMapper = new ObjectMapper();
+  private final ObjectMapper objectMapper;
 
   // 객체 -> 데이터베이스
   @Override

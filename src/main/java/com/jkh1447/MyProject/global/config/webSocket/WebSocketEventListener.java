@@ -1,4 +1,4 @@
-package com.jkh1447.MyProject.global.config;
+package com.jkh1447.MyProject.global.config.webSocket;
 
 import org.springframework.context.event.EventListener;
 import org.springframework.data.redis.core.RedisTemplate;

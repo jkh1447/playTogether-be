@@ -15,15 +15,11 @@ import lombok.Builder;
 
 @Builder
 public record MatchStatusInfo(
-    int groupSize, 
+    String groupSize, 
     int acceptCount, 
     List<MatchParticipant> participants,
     String queueKey,
     Map<String, String> acceptedUsers) {
-
-    public boolean isAllAccepted() {
-        return this.acceptCount >= this.groupSize;
-    }
 
     public boolean isAcceptedUser(String userId) {
         return this.acceptedUsers.containsKey(MatchingConstants.MATCH_ACCEPTED_PREFIX + userId);

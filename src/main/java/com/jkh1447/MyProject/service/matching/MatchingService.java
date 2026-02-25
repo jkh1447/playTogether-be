@@ -6,6 +6,8 @@ import org.springframework.stereotype.Service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import com.jkh1447.MyProject.dto.matching.MatchingRequest;
+import com.jkh1447.MyProject.service.matching.strategy.MatchStrategy;
+import com.jkh1447.MyProject.service.matching.strategy.MatchStrategyFactory;
 import com.jkh1447.MyProject.dto.matching.MatchDeclineResponse;
 import com.jkh1447.MyProject.dto.matching.MatchParticipant;
 import com.jkh1447.MyProject.dto.matching.MatchStatusInfo;
@@ -20,38 +22,53 @@ public class MatchingService {
     private final MatchQueueService queueService;
     private final MatchStatusService matchStatusService;
     private final RoomService roomService;
+    private final MatchStrategyFactory strategyFactory;
 
     public void joinQueue(String userId, MatchingRequest request) {
-        String queueKey = queueService.generateKey(request); // match:gameName:groupSize=size:filterPart
-        queueService.addToQueue(userId, queueKey);
+        MatchStrategy strategy = strategyFactory.getStrategy(request.gameName());
+        String queueKey = strategy.generateQueueKey(request);
+        String queueUserInfos = strategy.getQueueUserInfos(request);
+        queueService.addToQueue(userId, queueKey, queueUserInfos);
     }
 
     public void leaveQueue(String userId, MatchingRequest request) {
-        String queueKey = queueService.generateKey(request);
+        MatchStrategy strategy = strategyFactory.getStrategy(request.gameName());
+        String queueKey = strategy.generateQueueKey(request);
 
-        queueService.removeFromQueue(userId, queueKey);
+        queueService.removeUserFromQueue(userId, queueKey);
 
         log.info("[매칭 큐 나가기] userId: {}, game: {}", userId, request.gameName());
     }
 
     public void acceptMatch(String userId, String matchId) {
 
-        boolean accepted = matchStatusService.incrementAcceptCount(matchId, userId);
+        Long result = matchStatusService.incrementAcceptCount(matchId, userId);
 
-        if (!accepted) {
+        if (result == null) {
+            // 이미 삭제된 경우
+            return;
+        }
+
+        if (result == -1) {
             log.warn("[수락 실패] 이미 수락했거나 만료된 매칭. userId: {}, matchId: {}", userId, matchId);
-                    
+            return;
+        }
+        if (result == -2) {
+            log.warn("[수락 실패] 매칭이 존재하지 않습니다. userId: {}, matchId: {}", userId, matchId);
+            return;
+        }
+        if (result == 0) {
+            log.info("[매칭 진행중] userId: {}, matchId: {}", userId, matchId);
             return;
         }
 
-        MatchStatusInfo statusInfo = matchStatusService.getMatchStatus(matchId);
-        if (statusInfo == null) {
-            // 잡혔던 큐가 취소되고 다시 대기열로
-            log.warn("⚠️ 만료되었거나 존재하지 않는 매칭입니다: {}", matchId);
-            return;
-        }
+        if (result == 1) {
+            MatchStatusInfo statusInfo = matchStatusService.getMatchStatus(matchId);
+            if (statusInfo == null) {
+                log.warn("⚠️ 만료되었거나 존재하지 않는 매칭입니다: {}", matchId);
+                return;
+            }
 
-        if (statusInfo.isAllAccepted()) {
             completeMatch(matchId, statusInfo);
         }
 
@@ -77,13 +94,13 @@ public class MatchingService {
     public void declineMatch(String userId, String matchId) {
 
         boolean declined = matchStatusService.markAsDeclined(matchId);
-        if(!declined) {
+        if (!declined) {
             log.warn("[거절 실패] 이미 거절되었거나 만료된 매칭. userId: {}, matchId: {}", userId, matchId);
             return;
         }
 
         MatchStatusInfo statusInfo = matchStatusService.getMatchStatus(matchId);
-        if(statusInfo == null) {
+        if (statusInfo == null) {
             log.warn("⚠️ 만료되었거나 존재하지 않는 매칭입니다: {}", matchId);
             return;
         }
@@ -96,12 +113,13 @@ public class MatchingService {
         log.info("❌ [매칭 거절] matchId: {}, 거절자: {}", matchId, userId);
     }
 
-    private void handleMatchCancellation(String rejectUserId, String matchId, MatchStatusInfo statusInfo) {
+    private void handleMatchCancellation(String rejectUserId, String matchId,
+            MatchStatusInfo statusInfo) {
 
-        for(MatchParticipant participant: statusInfo.participants()){
+        for (MatchParticipant participant : statusInfo.participants()) {
             String participantId = participant.userId();
 
-            if(participantId.equals(rejectUserId)) {
+            if (participantId.equals(rejectUserId)) {
                 notificationService.sendDeclineMatch(participantId, matchId,
                         MatchDeclineResponse.Status.REJECTED);
             } else {
@@ -119,6 +137,6 @@ public class MatchingService {
         log.info("[Redis Delete] 비정상 종료 유저 큐 제거 완료: {}", userId);
     }
 
-    
+
 
 }

@@ -41,11 +41,11 @@ public class ChatingService {
     }
 
     // 참가자 나가기는 인터셉터에서 처리
-    private void checkAndCleanupRoom(String roomKey) {
-        Long size = redisTemplate.opsForHash().size(roomKey);
-        if (size == null || size == 0) {
-            redisTemplate.delete(roomKey);
-            log.info("방이 비어 있어 삭제 처리되었습니다: {}", roomKey);
-        }
-    }
+    // private void checkAndCleanupRoom(String roomKey) {
+    //     Long size = redisTemplate.opsForHash().size(roomKey);
+    //     if (size == null || size == 0) {
+    //         redisTemplate.delete(roomKey);
+    //         log.info("방이 비어 있어 삭제 처리되었습니다: {}", roomKey);
+    //     }
+    // }
 }

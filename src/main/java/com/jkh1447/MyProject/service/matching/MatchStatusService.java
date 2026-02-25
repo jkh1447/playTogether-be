@@ -6,11 +6,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Arrays;
 import java.util.stream.Collectors;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import com.jkh1447.MyProject.dto.matching.MatchParticipant;
 import com.jkh1447.MyProject.dto.matching.MatchStatusInfo;
 import com.jkh1447.MyProject.domain.matching.MatchingConstants;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
+import org.springframework.data.redis.core.script.RedisScript;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,17 +27,20 @@ public class MatchStatusService {
      * Redis Hash 구조 
      * 1. Match Status // 큐가 잡혔을 때 그 매치의 상태들을 저장
      * Key: {matchId}
-     * Value: {groupSize:int, acceptCount:int, participants:String, queueKey:String} + {userId+{userId}:"ACCEPTED"}(수락시 생성)
+     * Value: {groupSize:int, acceptCount:int, participants:String, queueKey:String} + {"user:{userId}":"ACCEPTED"}(수락시 생성)
      */
 
     private final RedisTemplate<String, Object> redisTemplate;
+
+    private final RedisScript<Long> incrementAcceptCountScript;
+    private final RedisScript<List> processMatchTimeoutScript;
 
     public void createMatchStatus(String matchId, MatchStatusInfo matchStatusInfo,
             int expireSeconds) {
         String statusKey = buildStatusKey(matchId);
 
         Map<String, Object> matchStatus = new HashMap<>();
-        matchStatus.put(MatchingConstants.MATCH_GROUP_SIZE, matchStatusInfo.groupSize());
+        matchStatus.put(MatchingConstants.MATCH_GROUP_SIZE, Integer.parseInt(matchStatusInfo.groupSize()));
         matchStatus.put(MatchingConstants.MATCH_ACCEPT_COUNT, 0);
         matchStatus.put(MatchingConstants.MATCH_PARTICIPANTS_DATA,
                 matchStatusInfo.participantsToRedisFormat());
@@ -54,6 +60,24 @@ public class MatchStatusService {
     public MatchStatusInfo getMatchStatus(String matchId) {
         String statusKey = buildStatusKey(matchId);
         Map<Object, Object> entries = redisTemplate.opsForHash().entries(statusKey);
+        
+        return convertToMatchStatusInfo(entries);
+    }
+
+    public MatchStatusInfo getMatchStatus(List<Object> data) {
+
+        Map<Object, Object> entries = new HashMap<>();
+        for (int i = 0; i < data.size(); i += 2) {
+            entries.put(
+                String.valueOf(data.get(i)), 
+                String.valueOf(data.get(i + 1))
+            );
+        }
+
+        return convertToMatchStatusInfo(entries);
+    }
+
+    private MatchStatusInfo convertToMatchStatusInfo(Map<Object, Object> entries) {
         if(entries == null || entries.isEmpty()) {
             return null;
         }
@@ -77,7 +101,7 @@ public class MatchStatusService {
             return null;
         }
 
-        int groupSize = Integer.parseInt(rawGroupSize.toString());
+        String groupSize = rawGroupSize.toString();
         int acceptCount = rawAcceptCount != null ? Integer.parseInt(rawAcceptCount.toString()) : 0;
         List<MatchParticipant> participants = parseParticipants(participantsData);
 
@@ -96,26 +120,18 @@ public class MatchStatusService {
 
     /**
      * 수락 카운트 증가
-     * 
-     * 기존 위치: MatchingService.acceptMatch (66-74줄)
-     * 
-     * @return 새로 수락된 경우 true, 이미 수락한 경우 false
+     * @return 1: 매칭 성사, 0: 매칭 진행중, -1: 중복 수락, -2: 매칭 없음
      */
-    public boolean incrementAcceptCount(String matchId, String userId) {
+    public Long incrementAcceptCount(String matchId, String userId) {
         String statusKey = buildStatusKey(matchId);
 
-        Boolean isNewAccept = redisTemplate.opsForHash().putIfAbsent(statusKey,
-                MatchingConstants.MATCH_ACCEPTED_PREFIX + userId,
-                MatchingConstants.MATCH_STATUS_ACCEPTED);
+        Long result = redisTemplate.execute(
+            incrementAcceptCountScript, 
+            List.of(statusKey), // KEYS[1]
+            userId // ARGV[1]
+        );
 
-        if (Boolean.FALSE.equals(isNewAccept)) {
-            log.warn("[중복 수락 방지] userId: {}, matchId: {}", userId, matchId);
-            return false;
-        }
-
-        redisTemplate.opsForHash().increment(statusKey, MatchingConstants.MATCH_ACCEPT_COUNT, 1);
-        log.info("[매칭 수락] userId: {}, matchId: {}", userId, matchId);
-        return true;
+        return result;
     }
 
     public boolean markAsDeclined(String matchId) {
@@ -144,5 +160,9 @@ public class MatchStatusService {
         return Boolean.TRUE.equals(isDeleted);
     }
 
-    
+    public List<Object> getMatchStatusAtomically(String matchId) {
+        String statusKey = buildStatusKey(matchId);
+        
+        return redisTemplate.execute(processMatchTimeoutScript, List.of(statusKey));
+    }
 }

@@ -1,4 +1,4 @@
-package com.jkh1447.MyProject.global.config;
+package com.jkh1447.MyProject.global.config.webSocket;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -16,6 +16,7 @@ import org.springframework.web.socket.server.support.HttpSessionHandshakeInterce
 import com.jkh1447.MyProject.domain.matching.MatchingConstants;
 import com.jkh1447.MyProject.dto.chating.ChatMessageDto;
 import com.jkh1447.MyProject.dto.chating.ParticipantsDto;
+import com.jkh1447.MyProject.global.config.StompHandler;
 import org.springframework.messaging.Message;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.annotation.Scheduled;
