@@ -37,6 +37,8 @@ public class MatchingService {
 
         queueService.removeUserFromQueue(userId, queueKey);
 
+        queueService.cleanQueueIfEmpty(queueKey);
+
         log.info("[매칭 큐 나가기] userId: {}, game: {}", userId, request.gameName());
     }
 
@@ -125,7 +127,7 @@ public class MatchingService {
             } else {
                 notificationService.sendDeclineMatch(participantId, matchId,
                         MatchDeclineResponse.Status.CANCELLED);
-                queueService.rejoinQueue(participantId, statusInfo.queueKey(), participant.score());
+                queueService.rejoinQueue(participantId, statusInfo.queueKey(), participant.score(), participant.infos());
             }
         }
     }

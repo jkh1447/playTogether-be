@@ -1,6 +1,7 @@
 package com.jkh1447.MyProject.service.matching;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ScheduledExecutorService;
@@ -9,7 +10,11 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Service;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jkh1447.MyProject.domain.matching.MatchingConstants;
+import com.jkh1447.MyProject.domain.matching.exception.MatchingErrorCode;
+import com.jkh1447.MyProject.domain.matching.exception.UserQueueInfoParsingException;
 import com.jkh1447.MyProject.dto.matching.MatchDeclineResponse;
 import com.jkh1447.MyProject.dto.matching.MatchParticipant;
 import com.jkh1447.MyProject.dto.matching.QueueInfo;
@@ -35,65 +40,29 @@ public class MatchingEngineService {
     private final MatchStatusService matchStatusService;
     private final ScheduledExecutorService matchTimeoutExecutor;
     private final MatchStrategyFactory strategyFactory;
+    private final ObjectMapper objectMapper;
 
     public void processMatching() {
         Set<Object> activeQueues =
                 redisTemplate.opsForSet().members(MatchingConstants.ACTIVE_QUEUES_KEY);
 
-        if (activeQueues == null || activeQueues.isEmpty()) {
+        Set<Object> activeAnyQueues =
+                redisTemplate.opsForSet().members(MatchingConstants.ACTIVE_ANY_QUEUE_KEY);
+
+        // 인원 조건 매칭 먼저 -> 인원 조건이 없는 매칭
+        if ((activeQueues == null || activeQueues.isEmpty()) && (activeAnyQueues == null || activeAnyQueues.isEmpty())) {
             return;
         }
 
         for (Object queueKeyObj : activeQueues) {
             String queueKey = (String) queueKeyObj;
-            if (queueKey.contains(MatchingConstants.MATCH_GROUP_SIZE + "=" + MatchingConstants.ANY_GROUP_SIZE)) {
-                processAnyQueue(queueKey);
-            } else {
-                processQueue(queueKey);
-            }
-        }
-    }
-
-    private void processAnyQueue(String queueKey){
-
-        RLock lock = redissonClient.getLock("lock:" + queueKey);
-
-        try {
-            boolean isLocked = lock.tryLock(0, 10, TimeUnit.SECONDS);
-            if (!isLocked) {
-                return;
-            }
-
-            QueueInfo queueInfo = QueueInfo.fromQueueKey(queueKey);
-            MatchStrategy strategy = strategyFactory.getStrategy(queueInfo.getGameName());
-
-            List<QueueUser> totalPool =
-                    queueService.loadFromQueue(queueKey, MatchingConstants.ONLY_ANY_LIMIT);
-
-            List<QueueUser> pivots =
-                    totalPool.stream().limit(MatchingConstants.PIVOT_LIMIT).toList();
-
-            for (QueueUser pivot : pivots) {
-                List<QueueUser> finalTeam = strategy.buildAnyTeam(pivot, totalPool, queueInfo);
-                if (finalTeam.size() >= MatchingConstants.ONLY_ANY_QUEUE_MIN_TEAM_SIZE) {
-                    queueInfo.setGroupSize(String.valueOf(finalTeam.size()));
-                    attemptMatch(queueKey, queueInfo, finalTeam);
-                    return;
-                }
-            }
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        } finally {
-            try {
-                if (lock.isHeldByCurrentThread()) {
-                    lock.unlock();
-                }
-            } catch (IllegalMonitorStateException e) {
-                // 락이 이미 만료된 상황. 
-                log.error("매칭 엔진 로직이 제한 시간(10초)을 초과했습니다");
-            }
+            processQueue(queueKey);
         }
 
+        for (Object queueKeyObj : activeAnyQueues) {
+            String queueKey = (String) queueKeyObj;
+            processAnyQueue(queueKey);
+        }
     }
 
     private void processQueue(String queueKey) { // 매칭
@@ -123,6 +92,48 @@ public class MatchingEngineService {
             for (QueueUser pivot : pivots) {
                 List<QueueUser> finalTeam = strategy.buildTeam(pivot, totalPool, queueInfo);
                 if (finalTeam.size() == Integer.parseInt(queueInfo.getGroupSize())) {
+                    attemptMatch(queueKey, queueInfo, finalTeam);
+                    return;
+                }
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        } finally {
+            try {
+                if (lock.isHeldByCurrentThread()) {
+                    lock.unlock();
+                }
+            } catch (IllegalMonitorStateException e) {
+                // 락이 이미 만료된 상황. 
+                log.error("매칭 엔진 로직이 제한 시간(10초)을 초과했습니다");
+            }
+        }
+
+    }
+
+    private void processAnyQueue(String queueKey) { // 매칭
+
+        RLock lock = redissonClient.getLock("lock:" + queueKey);
+
+        try {
+            boolean isLocked = lock.tryLock(0, 10, TimeUnit.SECONDS);
+            if (!isLocked) {
+                return;
+            }
+
+            QueueInfo queueInfo = QueueInfo.fromQueueKey(queueKey);
+            MatchStrategy strategy = strategyFactory.getStrategy(queueInfo.getGameName());
+
+            List<QueueUser> totalPool =
+                    queueService.loadFromQueue(queueKey, MatchingConstants.ONLY_ANY_LIMIT);
+
+            List<QueueUser> pivots =
+                    totalPool.stream().limit(MatchingConstants.PIVOT_LIMIT).toList();
+
+            for (QueueUser pivot : pivots) {
+                List<QueueUser> finalTeam = strategy.buildAnyTeam(pivot, totalPool, queueInfo);
+                if (finalTeam.size() >= MatchingConstants.ONLY_ANY_QUEUE_MIN_TEAM_SIZE) {
+                    queueInfo.setGroupSize(String.valueOf(finalTeam.size()));
                     attemptMatch(queueKey, queueInfo, finalTeam);
                     return;
                 }
@@ -187,7 +198,7 @@ public class MatchingEngineService {
                 notificationService.sendDeclineMatch(participant.userId(), matchId,
                         MatchDeclineResponse.Status.CANCELLED);
                 queueService.rejoinQueue(participant.userId(), matchStatusInfo.queueKey(),
-                        participant.score());
+                        participant.score(), participant.infos());
             } else {
                 notificationService.sendDeclineMatch(participant.userId(), matchId,
                         MatchDeclineResponse.Status.REJECTED);
@@ -234,9 +245,19 @@ public class MatchingEngineService {
         String userId = user.getUserId();
         double score = user.getScore();
         String nickname = userInfoHelper.getNickname(userId);
+        String userInfo = convertUserInfoToString(user.getUserInfo());
 
 
-        return MatchParticipant.builder().userId(userId).score(score).nickname(nickname).build();
+        return MatchParticipant.builder().userId(userId).score(score).nickname(nickname).infos(userInfo).build();
+    }
+
+    private String convertUserInfoToString(Map<String, Object> userInfo) {
+        try {
+            Map<String, Object> wrapper = Map.of("userInfo", userInfo);
+            return objectMapper.writeValueAsString(wrapper);
+        } catch (JsonProcessingException e) {
+            throw new UserQueueInfoParsingException(MatchingErrorCode.INVALID_QUEUE_USER_INFO_FORMAT);
+        }
     }
 }
 

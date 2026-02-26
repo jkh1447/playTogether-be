@@ -14,6 +14,7 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 public class QueueUser {
+
   private String userId;
   private String queueKey;
   private Double score;
@@ -23,4 +24,5 @@ public class QueueUser {
   public String getUserInfoString(String key) {
     return (String) userInfo.getOrDefault(key, "");
   } 
+
 }

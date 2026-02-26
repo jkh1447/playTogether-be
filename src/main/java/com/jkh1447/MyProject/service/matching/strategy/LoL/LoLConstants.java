@@ -20,5 +20,5 @@ public class LoLConstants {
   public static final int ANY_QUEUE_DEFAULT_GROUP_SIZE = 5;
 
   public static final Map<String, String> RANK_LEVEL = Map.of("아이언", "1", "브론즈", "2", "실버", "3",
-      "골드", "4", "플래티넘", "5", "에메랄드", "6", "다이아몬드", "7", "마스터+", "8");
+      "골드", "4", "플래티넘", "5", "에메랄드", "6", "다이아몬드", "7", "마스터", "8", "그랜드마스터", "9", "챌린저", "10");
 }

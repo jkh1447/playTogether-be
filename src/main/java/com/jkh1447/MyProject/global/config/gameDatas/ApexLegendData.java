@@ -7,15 +7,15 @@ import com.jkh1447.MyProject.dto.gameInfo.GameConditionDto;
 import com.jkh1447.MyProject.service.matching.strategy.ApexLegend.ApexLegendConstants;
 
 @Component
-public class ApexLegendData implements GameDataComponent{
+public class ApexLegendData implements GameDataComponent {
   @Override
   public String getGameName() {
-    return ApexLegendConstants.GAMENAME;
+    return ApexLegendConstants.GAME_ID;
   }
 
   @Override
   public GameInfo getGameInfo() {
-    
+
     List<GameConditionDto> apexLegendConditions = List.of(
       GameConditionDto.builder().id("mode").label("게임 모드").type("select")
         .options(List.of("일반전", "랭크")).defaultValue("랭크").build(),
@@ -28,10 +28,8 @@ public class ApexLegendData implements GameDataComponent{
         .thresholdOptions(List.of("브론즈", "실버", "골드", "플래티넘", "다이아몬드", "프레데터"))
         .defaultValue("브론즈~프레데터").dependsOn("mode").dependsOnValues(List.of("랭크")).build()
     );
-    
-    return GameInfo.builder().id(ApexLegendConstants.GAMENAME).name("ApexLegend")
-        .description("1인칭 배틀로얄 슈팅 게임").playerCount("3명")
-        .conditions(apexLegendConditions)
-        .build();
+
+    return GameInfo.builder().id(ApexLegendConstants.GAME_ID).name("ApexLegend")
+        .description("1인칭 배틀로얄 슈팅 게임").playerCount("3명").conditions(apexLegendConditions).build();
   }
 }

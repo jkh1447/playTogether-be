@@ -13,7 +13,7 @@ public class Overwatch2Data implements GameDataComponent {
 
   @Override
   public String getGameName() {
-    return Overwatch2Constants.GAMENAME;
+    return Overwatch2Constants.GAME_ID;
   }
 
   @Override
@@ -31,11 +31,11 @@ public class Overwatch2Data implements GameDataComponent {
         .thresholdOptions(List.of("브론즈", "실버", "골드", "플래티넘", "다이아몬드", "마스터", "그랜드마스터", "챔피언"))
         .defaultValue("브론즈~챔피언").dependsOn("mode").dependsOnValues(List.of("경쟁전")).build(),
       GameConditionDto.builder().id("position").label("포지션").type("select")
-        .options(List.of("상관없음", "탱커", "딜러", "딜러", "지원")).defaultValue("상관없음").
+        .options(List.of("상관없음", "탱커", "딜러", "지원")).defaultValue("상관없음").
         dependsOn("mode").dependsOnValues(List.of("경쟁전")).build()
     );
 
-    return GameInfo.builder().id(Overwatch2Constants.GAMENAME).name("Overwatch2")
+    return GameInfo.builder().id(Overwatch2Constants.GAME_ID).name("Overwatch2")
         .description("5v5 캐릭터 기반 전술 슈팅 게임").playerCount("5명")
         .conditions(overwatch2Conditions)
         .build();

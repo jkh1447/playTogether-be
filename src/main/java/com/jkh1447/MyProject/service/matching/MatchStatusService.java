@@ -114,7 +114,7 @@ public class MatchStatusService {
             return List.of();
         }
 
-        return Arrays.stream(participantsData.split(",")).map(MatchParticipant::fromRedisFormat)
+        return Arrays.stream(participantsData.split(";")).map(MatchParticipant::fromRedisFormat)
                 .collect(Collectors.toList());
     }
 

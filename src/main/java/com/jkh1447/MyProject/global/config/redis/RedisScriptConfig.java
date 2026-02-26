@@ -50,8 +50,12 @@ public class RedisScriptConfig {
       DefaultRedisScript<Long> redisScript = new DefaultRedisScript<>();
       redisScript.setScriptText("""
             redis.call('ZREM', KEYS[1], ARGV[1])
-            redis.call('HDEL', KEYS[2], ARGV[1])
-            redis.call('HDEL', KEYS[3], ARGV[1])    
+            local plainId = ARGV[1]
+            if string.sub(ARGV[1], 1, 1) == '"' and string.sub(ARGV[1], -1) == '"' then
+                plainId = string.sub(ARGV[1], 2, -2)
+            end
+            redis.call('HDEL', KEYS[2], plainId)
+            redis.call('HDEL', KEYS[3], plainId)    
             return 1
             """);
       redisScript.setResultType(Long.class);

@@ -60,7 +60,14 @@ public class MatchQueueService {
         redisTemplate.opsForZSet().add(queueKey, userId, score);
         redisTemplate.opsForHash().put(MatchingConstants.USER_QUEUE_STATUS_KEY, userId, queueKey); // 유저가 어느 큐에 있는지 저장
         redisTemplate.opsForHash().put(MatchingConstants.USER_QUEUE_INFOS_KEY, userId, queueUserInfos); // 유저의 큐에 대한 정보(필터) 저장
-        redisTemplate.opsForSet().add(MatchingConstants.ACTIVE_QUEUES_KEY, queueKey);
+        
+        if (queueKey.contains(MatchingConstants.MATCH_GROUP_SIZE + "=" + MatchingConstants.ANY_GROUP_SIZE)) {
+            redisTemplate.opsForSet().add(MatchingConstants.ACTIVE_ANY_QUEUE_KEY, queueKey);
+        }
+        else {
+            redisTemplate.opsForSet().add(MatchingConstants.ACTIVE_QUEUES_KEY, queueKey);
+        }
+        
 
         log.info("[큐 참여] userId: {}, queue: {}", userId, queueKey);
     }   
@@ -68,8 +75,10 @@ public class MatchQueueService {
     public void removeUserFromQueue(String userId, String queueKey) {
 
         List<String> keys = List.of(queueKey, MatchingConstants.USER_QUEUE_STATUS_KEY, MatchingConstants.USER_QUEUE_INFOS_KEY);
-        
+        redisTemplate.opsForSet().remove(MatchingConstants.ACTIVE_QUEUES_KEY, queueKey);
+        redisTemplate.opsForSet().remove(MatchingConstants.ACTIVE_ANY_QUEUE_KEY, queueKey);
         redisTemplate.execute(removeUserFromQueueScript, keys, userId);
+        
 
         log.info("[큐 나감] userId: {}, queue: {}", userId, queueKey);
     }
@@ -89,13 +98,16 @@ public class MatchQueueService {
         Long size = getQueueSize(queueKey);
         if (size == null || size == 0) {
             redisTemplate.opsForSet().remove(MatchingConstants.ACTIVE_QUEUES_KEY, queueKey);
+            redisTemplate.opsForSet().remove(MatchingConstants.ACTIVE_ANY_QUEUE_KEY, queueKey);
             log.debug("[큐 정리] 빈 큐 제거: {}", queueKey);
         }
     }
 
-    public void rejoinQueue(String userId, String queueKey, double score){
+    public void rejoinQueue(String userId, String queueKey, double score, String userQueueInfo){
         redisTemplate.opsForZSet().add(queueKey, userId, score);
         redisTemplate.opsForHash().put(MatchingConstants.USER_QUEUE_STATUS_KEY, userId, queueKey);
+        redisTemplate.opsForHash().put(MatchingConstants.USER_QUEUE_INFOS_KEY, userId, userQueueInfo);
+        
         
         log.info("[큐 재참여] userId: {}, queue: {}, score: {}", userId, queueKey, score);
     }

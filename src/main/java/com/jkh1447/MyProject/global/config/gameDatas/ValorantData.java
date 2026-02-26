@@ -29,10 +29,10 @@ public class ValorantData implements GameDataComponent {
         GameConditionDto.builder().id("rankRange").label("랭크 범위").type("threshold")
             .thresholdOptions(
                 List.of("아이언", "브론즈", "실버", "골드", "플래티넘", "다이아몬드", "초월자", "불멸", "레디언트"))
-            .defaultValue("아이언~레디언트").dependsOn("mode").dependsOnValues(List.of("경쟁전")).build(),
-        GameConditionDto.builder().id("position").label("포지션").type("select")
-            .options(List.of("상관없음", "척후대", "감시자", "타격대", "전략가")).defaultValue("상관없음")
-            .dependsOn("mode").dependsOnValues(List.of("경쟁전", "일반전")).build());
+            .defaultValue("아이언~레디언트").dependsOn("mode").dependsOnValues(List.of("경쟁전")).build());
+        // GameConditionDto.builder().id("position").label("포지션").type("select")
+        //     .options(List.of("상관없음", "척후대", "감시자", "타격대", "전략가")).defaultValue("상관없음")
+        //     .dependsOn("mode").dependsOnValues(List.of("경쟁전", "일반전")).build());
 
 
     return GameInfo.builder().id(ValorantConstants.GAME_ID).name("Valorant")

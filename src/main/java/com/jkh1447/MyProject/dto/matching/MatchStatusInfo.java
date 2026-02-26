@@ -30,6 +30,6 @@ public record MatchStatusInfo(
     }
 
     public String participantsToRedisFormat() {
-        return this.participants.stream().map(MatchParticipant::toRedisFormat).collect(Collectors.joining(","));
+        return this.participants.stream().map(MatchParticipant::toRedisFormat).collect(Collectors.joining(";"));
     }
 }

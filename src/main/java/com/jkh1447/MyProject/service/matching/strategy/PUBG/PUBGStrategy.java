@@ -1,4 +1,4 @@
-package com.jkh1447.MyProject.service.matching.strategy.Valorant;
+package com.jkh1447.MyProject.service.matching.strategy.PUBG;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -6,41 +6,43 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import org.springframework.stereotype.Component;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jkh1447.MyProject.domain.matching.MatchingConstants;
+import com.jkh1447.MyProject.domain.matching.exception.MatchingErrorCode;
 import com.jkh1447.MyProject.domain.matching.exception.UserQueueInfoParsingException;
 import com.jkh1447.MyProject.dto.matching.MatchingRequest;
 import com.jkh1447.MyProject.dto.matching.QueueInfo;
 import com.jkh1447.MyProject.dto.matching.QueueUser;
 import com.jkh1447.MyProject.service.matching.strategy.MatchStrategy;
+import com.jkh1447.MyProject.service.matching.strategy.PUBG.PUBGConstants;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
-import com.jkh1447.MyProject.domain.matching.exception.MatchingErrorCode;
 
 @Slf4j
 @AllArgsConstructor
 @Component
-public class ValorantStrategy implements MatchStrategy {
+public class PUBGStrategy implements MatchStrategy {
 
   private final ObjectMapper objectMapper;
 
   @Override
   public String getGameId() {
-    return ValorantConstants.GAME_ID;
+    return PUBGConstants.GAME_ID;
   }
 
   @Override
   public String generateQueueKey(MatchingRequest request) {
 
     String groupSize = request.filters().getOrDefault(MatchingConstants.MATCH_GROUP_SIZE, "2");
-    if (ValorantConstants.GROUP_SIZE_ANY.equals(groupSize))
+    if (PUBGConstants.GROUP_SIZE_ANY.equals(groupSize))
       groupSize = MatchingConstants.ANY_GROUP_SIZE;
     String gameName = getGameId();
-    String mode = request.filters().get(ValorantConstants.GAME_MODE);
+    String mode = request.filters().get(PUBGConstants.GAME_MODE);
+    String viewMode = request.filters().get(PUBGConstants.QUEUE_USER_INFO_VIEW_MODE);
     String queueKey =
-        MatchingConstants.QUEUE_KEY + ":" + gameName + ":" + "groupSize=" + groupSize + ":" + mode;
+        MatchingConstants.QUEUE_KEY + ":" + gameName + ":" + "groupSize=" + groupSize + ":" + mode + ":" + viewMode;
     return queueKey;
   }
 
@@ -53,21 +55,20 @@ public class ValorantStrategy implements MatchStrategy {
   public String getQueueUserInfos(MatchingRequest request) {
 
     Map<String, String> filters = request.filters();
-    String mode = filters.get(ValorantConstants.GAME_MODE);
+    String mode = filters.get(PUBGConstants.GAME_MODE);
 
     Map<String, Object> infoMap = new HashMap<>();
 
     switch (mode) {
-      case ValorantConstants.GAME_MODE_RANK:
-        infoMap.put(ValorantConstants.QUEUE_USER_INFO_MY_RANK,
-            convertRank(filters.get(ValorantConstants.QUEUE_USER_INFO_MY_RANK)));
-        infoMap.put(ValorantConstants.QUEUE_USER_INFO_RANK_RANGE,
-            convertRankRange(filters.get(ValorantConstants.QUEUE_USER_INFO_RANK_RANGE)));
-
+      case PUBGConstants.GAME_MODE_RANK:
+        infoMap.put(PUBGConstants.QUEUE_USER_INFO_MY_RANK,
+            convertRank(filters.get(PUBGConstants.QUEUE_USER_INFO_MY_RANK)));
+        infoMap.put(PUBGConstants.QUEUE_USER_INFO_RANK_RANGE,
+            convertRankRange(filters.get(PUBGConstants.QUEUE_USER_INFO_RANK_RANGE)));
         break;
-      case ValorantConstants.GAME_MODE_NORMAL:
-
+      case PUBGConstants.GAME_MODE_NORMAL:
         break;
+      
     }
 
     Map<String, Object> wrapper = Map.of("userInfo", infoMap);
@@ -82,13 +83,13 @@ public class ValorantStrategy implements MatchStrategy {
   }
 
   private String convertRank(String rankName) {
-    return ValorantConstants.RANK_LEVEL.get(rankName);
+    return PUBGConstants.RANK_LEVEL.get(rankName);
   }
 
   private String convertRankRange(String rawRange) {
     if (rawRange == null || !rawRange.contains("~"))
       return "0~0";
-    return Arrays.stream(rawRange.split("~")).map(rank -> ValorantConstants.RANK_LEVEL.get(rank))
+    return Arrays.stream(rawRange.split("~")).map(rank -> PUBGConstants.RANK_LEVEL.get(rank))
         .collect(Collectors.joining("~"));
   }
 
@@ -96,10 +97,10 @@ public class ValorantStrategy implements MatchStrategy {
   public List<QueueUser> buildTeam(QueueUser pivot, List<QueueUser> candidates,
       QueueInfo queueInfo) {
 
-    if(ValorantConstants.GAME_MODE_RANK.equals(queueInfo.getMode())){
+    if (PUBGConstants.GAME_MODE_RANK.equals(queueInfo.getMode())) {
       return rankModeTeamBuilding(pivot, candidates, queueInfo);
     }
-    else if (ValorantConstants.GAME_MODE_NORMAL.equals(queueInfo.getMode())){
+    else if (PUBGConstants.GAME_MODE_NORMAL.equals(queueInfo.getMode())) {
       return normalModeTeamBuilding(pivot, candidates, queueInfo);
     }
     return null;
@@ -108,15 +109,15 @@ public class ValorantStrategy implements MatchStrategy {
   @Override
   public List<QueueUser> buildAnyTeam(QueueUser pivot, List<QueueUser> candidates,
       QueueInfo queueInfo) {
-    
-    int groupSize = ValorantConstants.ANY_QUEUE_DEFAULT_GROUP_SIZE;
+
+    int groupSize = PUBGConstants.ANY_QUEUE_DEFAULT_GROUP_SIZE;
     List<QueueUser> finalTeam = null;
     queueInfo.setGroupSize(String.valueOf(groupSize)); // 그룹사이즈 5로 설정
     
-    if (ValorantConstants.GAME_MODE_RANK.equals(queueInfo.getMode())) {
+    if (PUBGConstants.GAME_MODE_RANK.equals(queueInfo.getMode())) {
       finalTeam = rankModeTeamBuilding(pivot, candidates, queueInfo);
     }
-    else if (ValorantConstants.GAME_MODE_NORMAL.equals(queueInfo.getMode())) {
+    else if (PUBGConstants.GAME_MODE_NORMAL.equals(queueInfo.getMode())) {
       finalTeam = normalModeTeamBuilding(pivot, candidates, queueInfo);
     }
 
@@ -139,9 +140,9 @@ public class ValorantStrategy implements MatchStrategy {
       }
       log.info("후보자 정보: {}", candidate.getUserInfo());
       int candidateRank =
-          Integer.parseInt(candidate.getUserInfoString(ValorantConstants.QUEUE_USER_INFO_MY_RANK));
+          Integer.parseInt(candidate.getUserInfoString(PUBGConstants.QUEUE_USER_INFO_MY_RANK));
       String candidateRankRange =
-          candidate.getUserInfoString(ValorantConstants.QUEUE_USER_INFO_RANK_RANGE);
+          candidate.getUserInfoString(PUBGConstants.QUEUE_USER_INFO_RANK_RANGE);
 
       // log.info("후보자 랭크 범위: {}", candidateRankRange);
       int candidateRankRangeStart = Integer.parseInt(candidateRankRange.split("~")[0]);
@@ -150,10 +151,10 @@ public class ValorantStrategy implements MatchStrategy {
       boolean isValidRankCondition = true;
 
       for (QueueUser user : team) {
-
+        
         int userRank =
-            Integer.parseInt(user.getUserInfoString(ValorantConstants.QUEUE_USER_INFO_MY_RANK));
-        String userRankRange = user.getUserInfoString(ValorantConstants.QUEUE_USER_INFO_RANK_RANGE);
+            Integer.parseInt(user.getUserInfoString(PUBGConstants.QUEUE_USER_INFO_MY_RANK));
+        String userRankRange = user.getUserInfoString(PUBGConstants.QUEUE_USER_INFO_RANK_RANGE);
         int userRankRangeStart = Integer.parseInt(userRankRange.split("~")[0]);
         int userRankRangeEnd = Integer.parseInt(userRankRange.split("~")[1]);
 
@@ -169,7 +170,7 @@ public class ValorantStrategy implements MatchStrategy {
       if (!isValidRankCondition) {
         continue;
       }
-
+      
       team.add(candidate);
     }
 
@@ -177,7 +178,6 @@ public class ValorantStrategy implements MatchStrategy {
   }
 
   private List<QueueUser> normalModeTeamBuilding(QueueUser pivot, List<QueueUser> candidates, QueueInfo queueInfo) {
-    
     List<QueueUser> team = new ArrayList<>();
     team.add(pivot);
 
@@ -195,4 +195,5 @@ public class ValorantStrategy implements MatchStrategy {
 
     return team;
   }
+
 }

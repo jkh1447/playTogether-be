@@ -1,6 +1,8 @@
 package com.jkh1447.MyProject.service.matching.strategy.LoL;
 
 import com.jkh1447.MyProject.domain.matching.MatchingConstants;
+import com.jkh1447.MyProject.domain.matching.exception.MatchingErrorCode;
+import com.jkh1447.MyProject.domain.matching.exception.UserQueueInfoParsingException;
 import com.jkh1447.MyProject.dto.matching.QueueUser;
 import com.jkh1447.MyProject.dto.matching.MatchingRequest;
 import com.jkh1447.MyProject.service.matching.strategy.MatchStrategy;
@@ -89,7 +91,7 @@ public class LoLStrategy implements MatchStrategy {
     } catch (JsonProcessingException e) {
       log.error("JSON 변환 중 오류 발생", e);
       // 나중에 예외처리
-      throw new RuntimeException(e);
+      throw new UserQueueInfoParsingException(MatchingErrorCode.INVALID_QUEUE_USER_INFO_FORMAT);
     }
   }
 
@@ -108,6 +110,120 @@ public class LoLStrategy implements MatchStrategy {
   public List<QueueUser> buildTeam(QueueUser pivot, List<QueueUser> candidates,
       QueueInfo queueInfo) {
 
+    if (LoLConstants.GAME_MODE_RANK.equals(queueInfo.getMode()) || LoLConstants.GAME_MODE_FLEX.equals(queueInfo.getMode())) {
+      return rankModeTeamBuilding(pivot, candidates, queueInfo);
+    }
+    else if (LoLConstants.GAME_MODE_NORMAL.equals(queueInfo.getMode())) {
+      return normalModeTeamBuilding(pivot, candidates, queueInfo);
+    }
+    else {
+      return noConditionTeamBuilding(pivot, candidates, queueInfo);
+    }
+  }
+
+  @Override
+  public List<QueueUser> buildAnyTeam(QueueUser pivot, List<QueueUser> candidates,
+      QueueInfo queueInfo) {
+
+    int groupSize = LoLConstants.ANY_QUEUE_DEFAULT_GROUP_SIZE;
+    List<QueueUser> finalTeam = null;
+    queueInfo.setGroupSize(String.valueOf(groupSize)); // 그룹사이즈 5로 설정
+    
+    if (LoLConstants.GAME_MODE_RANK.equals(queueInfo.getMode()) || LoLConstants.GAME_MODE_FLEX.equals(queueInfo.getMode())) {
+      finalTeam = rankModeTeamBuilding(pivot, candidates, queueInfo);
+    }
+    else if (LoLConstants.GAME_MODE_NORMAL.equals(queueInfo.getMode())) {
+      finalTeam = normalModeTeamBuilding(pivot, candidates, queueInfo);
+    }
+    else {
+      finalTeam = noConditionTeamBuilding(pivot, candidates, queueInfo);
+    }
+
+    queueInfo.setGroupSize(String.valueOf(finalTeam.size())); // 최종 그룹사이즈
+    return finalTeam;
+  }
+
+  private List<QueueUser> noConditionTeamBuilding(QueueUser pivot, List<QueueUser> candidates, QueueInfo queueInfo) {
+    List<QueueUser> team = new ArrayList<>();
+    team.add(pivot);
+
+    for (QueueUser candidate : candidates) {
+      if (candidate.getUserId().equals(pivot.getUserId())) {
+        // pivot 제외
+        continue;
+      }
+      if (team.size() == Integer.parseInt(queueInfo.getGroupSize())) {
+        break;
+      }
+
+      team.add(candidate);
+    }
+
+    return team;
+  }
+
+  private List<QueueUser> rankModeTeamBuilding(QueueUser pivot, List<QueueUser> candidates, QueueInfo queueInfo) {
+
+    List<QueueUser> team = new ArrayList<>();
+    team.add(pivot);
+
+    for (QueueUser candidate : candidates) {
+      if (candidate.getUserId().equals(pivot.getUserId())) {
+        // pivot 제외
+        continue;
+      }
+      if (team.size() == Integer.parseInt(queueInfo.getGroupSize())) {
+        break;
+      }
+      log.info("후보자 정보: {}", candidate.getUserInfo());
+      String candidatePosition = candidate.getUserInfoString(LoLConstants.QUEUE_USER_INFO_POSITION);
+      int candidateRank =
+          Integer.parseInt(candidate.getUserInfoString(LoLConstants.QUEUE_USER_INFO_MY_RANK));
+      String candidateRankRange =
+          candidate.getUserInfoString(LoLConstants.QUEUE_USER_INFO_RANK_RANGE);
+
+      // log.info("후보자 랭크 범위: {}", candidateRankRange);
+      int candidateRankRangeStart = Integer.parseInt(candidateRankRange.split("~")[0]);
+      int candidateRankRangeEnd = Integer.parseInt(candidateRankRange.split("~")[1]);
+
+      boolean isSamePosition = false;
+      boolean isValidRankCondition = true;
+
+      for (QueueUser user : team) {
+        String userPosition = user.getUserInfoString(LoLConstants.QUEUE_USER_INFO_POSITION);
+        if (!LoLConstants.POSITION_ANY.equals(userPosition)
+            && !LoLConstants.POSITION_ANY.equals(candidatePosition)
+            && candidatePosition.equals(userPosition)) { // 포지션이 같으면
+          isSamePosition = true;
+          break;
+        }
+
+        int userRank =
+            Integer.parseInt(user.getUserInfoString(LoLConstants.QUEUE_USER_INFO_MY_RANK));
+        String userRankRange = user.getUserInfoString(LoLConstants.QUEUE_USER_INFO_RANK_RANGE);
+        int userRankRangeStart = Integer.parseInt(userRankRange.split("~")[0]);
+        int userRankRangeEnd = Integer.parseInt(userRankRange.split("~")[1]);
+
+        // 후보자의 랭크 범위에 팀원의 랭크가 포함되는지 확인
+        if ((candidateRankRangeStart > userRank || userRank > candidateRankRangeEnd)
+            || (userRankRangeStart > candidateRank || candidateRank > userRankRangeEnd)) {
+          isValidRankCondition = false;
+          break;
+        }
+
+      }
+
+      if (isSamePosition || !isValidRankCondition) {
+        continue;
+      }
+
+      team.add(candidate);
+    }
+
+    return team;
+  }
+
+  private List<QueueUser> normalModeTeamBuilding(QueueUser pivot, List<QueueUser> candidates, QueueInfo queueInfo) {
     List<QueueUser> team = new ArrayList<>();
     team.add(pivot);
 
@@ -121,15 +237,8 @@ public class LoLStrategy implements MatchStrategy {
       }
 
       String candidatePosition = candidate.getUserInfoString(LoLConstants.QUEUE_USER_INFO_POSITION);
-      int candidateRank =
-          Integer.parseInt(candidate.getUserInfoString(LoLConstants.QUEUE_USER_INFO_MY_RANK));
-      String candidateRankRange =
-          candidate.getUserInfoString(LoLConstants.QUEUE_USER_INFO_RANK_RANGE);
-      int candidateRankRangeStart = Integer.parseInt(candidateRankRange.split("~")[0]);
-      int candidateRankRangeEnd = Integer.parseInt(candidateRankRange.split("~")[1]);
 
       boolean isSamePosition = false;
-      boolean isValidRankCondition = true;
 
       for (QueueUser user : team) {
         String userPosition = user.getUserInfoString(LoLConstants.QUEUE_USER_INFO_POSITION);
@@ -140,91 +249,14 @@ public class LoLStrategy implements MatchStrategy {
           break;
         }
 
-        int userRank =
-            Integer.parseInt(user.getUserInfoString(LoLConstants.QUEUE_USER_INFO_MY_RANK));
-        String userRankRange = user.getUserInfoString(LoLConstants.QUEUE_USER_INFO_RANK_RANGE);
-        int userRankRangeStart = Integer.parseInt(userRankRange.split("~")[0]);
-        int userRankRangeEnd = Integer.parseInt(userRankRange.split("~")[1]);
-
-        // 후보자의 랭크 범위에 팀원의 랭크가 포함되는지 확인
-        if ((candidateRankRangeStart > userRank || userRank > candidateRankRangeEnd)
-            || (userRankRangeStart > candidateRank || candidateRank > userRankRangeEnd)) {
-          isValidRankCondition = false;
-          break;
-        }
-
       }
 
-      if (isSamePosition || !isValidRankCondition) {
+      if (isSamePosition) {
         continue;
       }
 
       team.add(candidate);
     }
-
-
-    return team;
-  }
-
-  @Override
-  public List<QueueUser> buildAnyTeam(QueueUser pivot, List<QueueUser> candidates,
-      QueueInfo queueInfo) {
-    List<QueueUser> team = new ArrayList<>();
-    team.add(pivot);
-
-    int groupSize = LoLConstants.ANY_QUEUE_DEFAULT_GROUP_SIZE;
-
-    for (QueueUser candidate : candidates) {
-      if (candidate.getUserId().equals(pivot.getUserId())) {
-        // pivot 제외
-        continue;
-      }
-      if (team.size() == groupSize) {
-        break;
-      }
-
-      String candidatePosition = candidate.getUserInfoString(LoLConstants.QUEUE_USER_INFO_POSITION);
-      int candidateRank =
-          Integer.parseInt(candidate.getUserInfoString(LoLConstants.QUEUE_USER_INFO_MY_RANK));
-      String candidateRankRange =
-          candidate.getUserInfoString(LoLConstants.QUEUE_USER_INFO_RANK_RANGE);
-      int candidateRankRangeStart = Integer.parseInt(candidateRankRange.split("~")[0]);
-      int candidateRankRangeEnd = Integer.parseInt(candidateRankRange.split("~")[1]);
-
-      boolean isSamePosition = false;
-      boolean isValidRankCondition = true;
-
-      for (QueueUser user : team) {
-        String userPosition = user.getUserInfoString(LoLConstants.QUEUE_USER_INFO_POSITION);
-        if (!LoLConstants.POSITION_ANY.equals(userPosition)
-            && !LoLConstants.POSITION_ANY.equals(candidatePosition)
-            && candidatePosition.equals(userPosition)) { // 포지션이 같으면
-          isSamePosition = true;
-          break;
-        }
-
-        int userRank =
-            Integer.parseInt(user.getUserInfoString(LoLConstants.QUEUE_USER_INFO_MY_RANK));
-        String userRankRange = user.getUserInfoString(LoLConstants.QUEUE_USER_INFO_RANK_RANGE);
-        int userRankRangeStart = Integer.parseInt(userRankRange.split("~")[0]);
-        int userRankRangeEnd = Integer.parseInt(userRankRange.split("~")[1]);
-
-        // 후보자의 랭크 범위에 팀원의 랭크가 포함되는지 확인
-        if ((candidateRankRangeStart > userRank || userRank > candidateRankRangeEnd)
-            || (userRankRangeStart > candidateRank || candidateRank > userRankRangeEnd)) {
-          isValidRankCondition = false;
-          break;
-        }
-
-      }
-
-      if (isSamePosition || !isValidRankCondition) {
-        continue;
-      }
-
-      team.add(candidate);
-    }
-
 
     return team;
   }

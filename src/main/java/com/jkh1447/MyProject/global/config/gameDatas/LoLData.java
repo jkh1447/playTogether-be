@@ -28,7 +28,7 @@ public class LoLData implements GameDataComponent {
             .defaultValue("실버").dependsOn("mode").dependsOnValues(List.of("랭크", "자유랭크")).build(),
         GameConditionDto.builder().id("rankRange").label("랭크").type("threshold")
             .thresholdOptions(List.of("아이언", "브론즈", "실버", "골드", "플래티넘", "에메랄드", "다이아몬드", "마스터", "그랜드마스터", "챌린저"))
-            .defaultValue("아이언~마스터+").dependsOn("mode").dependsOnValues(List.of("랭크", "자유랭크")).build(),
+            .defaultValue("아이언~챌린저").dependsOn("mode").dependsOnValues(List.of("랭크", "자유랭크")).build(),
         GameConditionDto.builder().id("position").label("포지션").type("select")
             .options(List.of( "상관없음", "탑", "정글", "미드", "원딜", "서포터")).defaultValue("상관없음")
             .dependsOn("mode").dependsOnValues(List.of("랭크", "자유랭크", "일반게임")).build());

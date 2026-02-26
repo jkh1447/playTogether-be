@@ -12,6 +12,7 @@ import org.springframework.http.HttpStatus;
 import com.jkh1447.MyProject.domain.auth.exception.TokenException;
 import com.jkh1447.MyProject.domain.auth.exception.TokenExpiredException;
 import com.jkh1447.MyProject.domain.matching.exception.InvalidStringFormatException;
+import com.jkh1447.MyProject.domain.matching.exception.UserQueueInfoParsingException;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -76,6 +77,14 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<?>> handleInvalidStringFormatException(InvalidStringFormatException e) {
 
         log.error("잘못된 문자열 형식: {}", e.getMessage(), e);
+
+        return ResponseEntity.status(e.getHttpStatus()).body(ApiResponse.fail(e.getHttpStatus().name(), ""));
+    }
+
+    @ExceptionHandler(UserQueueInfoParsingException.class)
+    public ResponseEntity<ApiResponse<?>> handleUserQueueInfoParsingException(UserQueueInfoParsingException e) {
+
+        log.error("유저 큐 정보 파싱 오류: {}", e.getMessage(), e);
 
         return ResponseEntity.status(e.getHttpStatus()).body(ApiResponse.fail(e.getHttpStatus().name(), ""));
     }
