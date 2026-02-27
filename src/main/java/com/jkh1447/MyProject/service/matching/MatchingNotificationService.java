@@ -63,5 +63,7 @@ public class MatchingNotificationService {
             MatchingConstants.SUB_MATCH_DECLINE_PATH,
             matchDeclineResponse
         );
+
+        log.info("매칭 거절 알림 전송: userId={}, matchId={}", userId, matchId);
     }
 }

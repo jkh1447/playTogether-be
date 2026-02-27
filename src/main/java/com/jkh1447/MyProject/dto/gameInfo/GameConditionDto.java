@@ -19,6 +19,9 @@ public class GameConditionDto {
   private String type;
   private List<String> options;
 
+  private String placeholder;
+  private Integer maxLength;
+
   private List<String> thresholdOptions;
 
   private String dependsOn;

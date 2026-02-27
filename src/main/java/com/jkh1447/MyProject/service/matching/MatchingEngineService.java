@@ -76,6 +76,7 @@ public class MatchingEngineService {
             }
 
             QueueInfo queueInfo = QueueInfo.fromQueueKey(queueKey);
+            log.info("[매칭] queueKey: {}", queueKey);
             MatchStrategy strategy = strategyFactory.getStrategy(queueInfo.getGameName());
             String anyQueueKey = strategy.generateAnyQueueKey(queueKey);
 
@@ -170,7 +171,7 @@ public class MatchingEngineService {
             try {
                 processMatchTimeout(matchId);
             } catch (Exception e) {
-                log.error("[매칭 타임아웃 스케줄링 오류] queueKey: {}, 오류: {}", queueKey, e.getMessage());
+                log.error("[매칭 타임아웃 스케줄링 오류] queueKey: {}, 오류: {}", queueKey, e);
             }
         }, MatchingConstants.MATCH_TIMEOUT_SECONDS, TimeUnit.SECONDS);
     }
@@ -180,6 +181,7 @@ public class MatchingEngineService {
         String statusKey = MatchingConstants.MATCH_STATUS_KEY + matchId;
 
         List<Object> result = matchStatusService.getMatchStatusAtomically(matchId);
+        log.info("[타임아웃 로직 시작] result: {}", result);
 
         if(result == null) {
             // 찰나의 순간에 수락과 타임아웃이 경합된 경우 타임아웃처리 하지 않음.

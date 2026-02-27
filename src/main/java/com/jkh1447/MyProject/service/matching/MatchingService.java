@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import com.jkh1447.MyProject.dto.matching.MatchingRequest;
 import com.jkh1447.MyProject.service.matching.strategy.MatchStrategy;
 import com.jkh1447.MyProject.service.matching.strategy.MatchStrategyFactory;
+import com.jkh1447.MyProject.domain.matching.MatchingConstants;
 import com.jkh1447.MyProject.dto.matching.MatchDeclineResponse;
 import com.jkh1447.MyProject.dto.matching.MatchParticipant;
 import com.jkh1447.MyProject.dto.matching.MatchStatusInfo;
@@ -25,10 +26,12 @@ public class MatchingService {
     private final MatchStrategyFactory strategyFactory;
 
     public void joinQueue(String userId, MatchingRequest request) {
+        
         MatchStrategy strategy = strategyFactory.getStrategy(request.gameName());
         String queueKey = strategy.generateQueueKey(request);
         String queueUserInfos = strategy.getQueueUserInfos(request);
         queueService.addToQueue(userId, queueKey, queueUserInfos);
+        
     }
 
     public void leaveQueue(String userId, MatchingRequest request) {

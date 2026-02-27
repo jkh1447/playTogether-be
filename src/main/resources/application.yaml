@@ -26,3 +26,8 @@ jwt:
   threads:
     virtual:
       enabled: true
+
+gemini:
+  api:
+    key: ${GEMINI_API_KEY}
+    baseUrl: https://generativelanguage.googleapis.com/

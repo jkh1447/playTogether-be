@@ -9,6 +9,9 @@ public class MatchingConstants {
     public static final int ANY_LIMIT = 30;
     public static final int ONLY_ANY_LIMIT = 80;
     public static final int ONLY_ANY_QUEUE_MIN_TEAM_SIZE = 2;
+
+    public static final String AI_MATCHING = "AI_MATCHING";
+    public static final String AI_USER_INPUT = "userInput";
     
     public static final String MATCH_STATUS_KEY = "match:status:";
     public static final String ROOM_STATUS_KEY = "room:status:";

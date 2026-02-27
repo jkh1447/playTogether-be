@@ -26,7 +26,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         // 엑세스 토큰 만료시 여기서 잡아서 401던지기
         try {
             String token = JwtUtil.getTokenFromCookie(request, AuthConstants.TOKEN_NAME);
-            System.out.println("보낸 토큰 확인: " + token);
+            // System.out.println("보낸 토큰 확인: " + token);
             if (token != null && jwtUtil.validateToken(token)) {
                 var authentication = jwtUtil.getAuthentication(token);
 
