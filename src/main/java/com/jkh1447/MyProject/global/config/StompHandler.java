@@ -2,6 +2,7 @@ package com.jkh1447.MyProject.global.config;
 
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
+import org.springframework.messaging.MessageDeliveryException;
 import org.springframework.messaging.simp.stomp.StompCommand;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.ChannelInterceptor;
@@ -55,12 +56,20 @@ public class StompHandler implements ChannelInterceptor {
         String roomId = accessor.getFirstNativeHeader("roomId");
         String nickname = accessor.getFirstNativeHeader("nickname");
 
+        if (!chatRoomService.isUserInRoom(nickname, roomId)) {
+            throw new MessageDeliveryException("권한이 없는 채팅방입니다.");
+        }
+
         if (accessor.getSessionAttributes() != null) {
             accessor.getSessionAttributes().put("roomId", roomId);
             accessor.getSessionAttributes().put("nickname", nickname);
             log.info("세션 정보 저장 완료: 방 {}", roomId);
         }
+
+
     }
+
+
 
     private void handleUnsubscribe(StompHeaderAccessor accessor) {
         String roomId = (String) accessor.getSessionAttributes().get("roomId");

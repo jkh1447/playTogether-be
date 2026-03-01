@@ -5,12 +5,14 @@ import com.jkh1447.MyProject.domain.auth.exception.AuthErrorCode;
 import com.jkh1447.MyProject.domain.auth.exception.AuthException;
 import com.jkh1447.MyProject.domain.auth.exception.RefreshTokenNotFoundFromCooKie;
 import com.jkh1447.MyProject.domain.users.exception.UserNotFoundException;
+import com.jkh1447.MyProject.global.exception.TooManyRequestException;
 import com.jkh1447.MyProject.global.response.ApiResponse;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpStatus;
 import com.jkh1447.MyProject.domain.auth.exception.TokenException;
 import com.jkh1447.MyProject.domain.auth.exception.TokenExpiredException;
+import com.jkh1447.MyProject.domain.matching.exception.AlreadyInQueueException;
 import com.jkh1447.MyProject.domain.matching.exception.InvalidStringFormatException;
 import com.jkh1447.MyProject.domain.matching.exception.UserQueueInfoParsingException;
 import lombok.extern.slf4j.Slf4j;
@@ -87,5 +89,21 @@ public class GlobalExceptionHandler {
         log.error("유저 큐 정보 파싱 오류: {}", e.getMessage(), e);
 
         return ResponseEntity.status(e.getHttpStatus()).body(ApiResponse.fail(e.getHttpStatus().name(), ""));
+    }
+
+    @ExceptionHandler(TooManyRequestException.class)
+    public ResponseEntity<ApiResponse<?>> handleTooManyRequestException(TooManyRequestException e) {
+
+        log.error("너무 많은 요청: {}", e.getMessage(), e);
+
+        return ResponseEntity.status(e.getHttpStatus()).body(ApiResponse.fail(e.getHttpStatus().name(), e.getMessage()));
+    }
+
+    @ExceptionHandler(AlreadyInQueueException.class)
+    public ResponseEntity<ApiResponse<?>> handleAlreadyInQueueException(AlreadyInQueueException e) {
+
+        log.error("이미 매칭 큐에 참가중: {}", e.getMessage(), e);
+
+        return ResponseEntity.status(e.getHttpStatus()).body(ApiResponse.fail(e.getHttpStatus().name(), e.getMessage()));
     }
 }

@@ -4,6 +4,7 @@ import com.jkh1447.MyProject.dto.matching.QueueUser;
 import com.jkh1447.MyProject.dto.matching.MatchingRequest;
 import com.jkh1447.MyProject.dto.matching.QueueInfo;
 import java.util.List;
+import java.util.Map;
 
 public interface MatchStrategy {
 

@@ -2,6 +2,7 @@ package com.jkh1447.MyProject.service.gameInfo;
 
 import org.springframework.stereotype.Service;
 import com.jkh1447.MyProject.repository.gameInfo.gameInfoRepository;
+import com.jkh1447.MyProject.service.matching.strategy.AI.AIConstants;
 import com.jkh1447.MyProject.dto.gameInfo.GameInfoDto;
 import com.jkh1447.MyProject.domain.gameInfo.GameInfo;
 import java.util.List;
@@ -16,6 +17,11 @@ public class GameInfoService {
   
   public List<GameInfoDto> getAllGameInfoWithoutConditions() {
     List<GameInfo> allGameInfos = gameInfoRepository.findAll();
+    GameInfo AI_GAME = allGameInfos.stream().filter(gameInfo -> gameInfo.getId().equals(AIConstants.GAME_ID)).findFirst().orElse(null);
+    if (AI_GAME != null) {
+      allGameInfos.remove(AI_GAME);
+      allGameInfos.add(0, AI_GAME);
+    }
     return allGameInfos.stream().map(GameInfoDto::fromWithoutConditions).toList();
   }
 

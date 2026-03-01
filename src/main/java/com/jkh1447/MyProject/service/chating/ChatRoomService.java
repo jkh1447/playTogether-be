@@ -32,4 +32,9 @@ public class ChatRoomService {
         String roomStatusKey = MatchingConstants.ROOM_STATUS_KEY + roomId;
         redisTemplate.opsForHash().delete(roomStatusKey, userId);
     }
+
+    public boolean isUserInRoom(String userId, String roomId) {
+        String roomStatusKey = MatchingConstants.ROOM_STATUS_KEY + roomId;
+        return redisTemplate.opsForHash().hasKey(roomStatusKey, userId);
+    }
 }

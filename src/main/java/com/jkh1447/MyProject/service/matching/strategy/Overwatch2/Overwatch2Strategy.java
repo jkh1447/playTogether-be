@@ -72,7 +72,7 @@ public class Overwatch2Strategy implements MatchStrategy {
       
     }
 
-    Map<String, Object> wrapper = Map.of("userInfo", infoMap);
+   Map<String, Object> wrapper = Map.of("userInfo", infoMap);
 
     try {
       return objectMapper.writeValueAsString(wrapper);

@@ -63,6 +63,8 @@ public class MatchStatusService {
         String statusKey = buildStatusKey(matchId);
         Map<Object, Object> entries = redisTemplate.opsForHash().entries(statusKey);
 
+        // 여기서 들고올때, jackson serializer로 인해 string으로 들고오게 된다. 그래서 여기 파싱에는 문제가 없다. (수락하는 경우.)
+
         return convertToMatchStatusInfo(entries);
     }
 
@@ -70,7 +72,15 @@ public class MatchStatusService {
 
         Map<Object, Object> entries = new HashMap<>();
         for (int i = 0; i < data.size(); i += 2) {
-            entries.put(String.valueOf(data.get(i)), String.valueOf(data.get(i + 1)));
+            String key = String.valueOf(data.get(i));
+            String value = String.valueOf(data.get(i + 1));
+
+            // 💡 participants 키인 경우에만 양쪽 따옴표 제거
+            if ("participantsData".equals(key) && value != null) {
+                value = value.replace("\"", "");
+            }
+
+            entries.put(key, value);
         }
 
         return convertToMatchStatusInfo(entries);
@@ -113,9 +123,7 @@ public class MatchStatusService {
             return List.of();
         }
 
-        String cleanData = participantsData.substring(1, participantsData.length() - 1);
-
-        return Arrays.stream(cleanData.split(";")).map(MatchParticipant::fromRedisFormat)
+        return Arrays.stream(participantsData.split(",")).map(MatchParticipant::fromRedisFormat)
                 .collect(Collectors.toList());
     }
 

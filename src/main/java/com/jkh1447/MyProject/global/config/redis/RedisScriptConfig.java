@@ -84,6 +84,44 @@ public class RedisScriptConfig {
     }
 
     @Bean
+    public DefaultRedisScript<Long> removeUsersFromQueueWithoutUserQueueInfosScript() {
+        DefaultRedisScript<Long> redisScript = new DefaultRedisScript<>();
+        redisScript.setScriptText("""
+            local count = 0
+            for i, userId in ipairs(ARGV) do
+                local removed = redis.call('ZREM', KEYS[1], userId)
+                local plainId = userId
+                if string.sub(userId, 1, 1) == '"' and string.sub(userId, -1) == '"' then
+                    plainId = string.sub(userId, 2, -2)
+                end
+                redis.call('HDEL', KEYS[2], plainId)
+                if removed > 0 then count = count + 1 end
+            end
+            return count
+        """);
+        redisScript.setResultType(Long.class);
+        return redisScript;
+    }
+
+    @Bean
+    public DefaultRedisScript<Long> removeUsersFromQueueInfosScript() {
+        DefaultRedisScript<Long> redisScript = new DefaultRedisScript<>();
+        redisScript.setScriptText("""
+            local count = 0
+            for i, userId in ipairs(ARGV) do
+                local plainId = userId
+                if string.sub(userId, 1, 1) == '"' and string.sub(userId, -1) == '"' then
+                    plainId = string.sub(userId, 2, -2)
+                end
+                redis.call('HDEL', KEYS[1], plainId)
+            end
+            return count
+        """);
+        redisScript.setResultType(Long.class);
+        return redisScript;
+    }
+
+    @Bean
     public DefaultRedisScript<List> processMatchTimeoutScript() {
         DefaultRedisScript<List> redisScript = new DefaultRedisScript<>();
         redisScript.setScriptText("""

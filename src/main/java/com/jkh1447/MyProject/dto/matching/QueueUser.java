@@ -2,6 +2,9 @@ package com.jkh1447.MyProject.dto.matching;
 
 import java.util.HashMap;
 import java.util.Map;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -13,7 +16,9 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class QueueUser {
+
 
   private String userId;
   private String queueKey;
@@ -24,5 +29,6 @@ public class QueueUser {
   public String getUserInfoString(String key) {
     return (String) userInfo.getOrDefault(key, "");
   } 
+
 
 }

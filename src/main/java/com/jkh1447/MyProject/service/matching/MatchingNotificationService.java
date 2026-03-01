@@ -36,7 +36,7 @@ public class MatchingNotificationService {
             matchFoundResponse
         );
 
-        log.info("매칭 성공 알림 전송: userId={}, matchId={}", userId, matchId);
+        log.info("매칭 발견 알림 전송: userId={}, matchId={}", userId, matchId);
     }
 
     public void sendMoveToRoom(String userId, String roomId) {
@@ -44,7 +44,7 @@ public class MatchingNotificationService {
             .roomId(roomId)
             .status("MATCH_COMPLETE")
             .build();
-
+        log.info("매칭 성공 알림 전송: userId={}, roomId={}", userId, roomId);
         messagingTemplate.convertAndSendToUser(
             userId,
             MatchingConstants.SUB_MOVE_ROOM_PATH,

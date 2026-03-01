@@ -158,8 +158,8 @@ public class MatchingEngineService {
 
         log.info("[매칭 시도] queue: {}, 필요 인원: {}", queueKey, queueInfo.getGroupSize());
 
-        // 큐에서 제거
-        queueService.removeUsersFromQueue(team, queueKey);
+        // 큐에서 제거 -> 이거 바꾸기, userqueueinfo 제외하고 삭제
+        queueService.removeUsersFromQueueWithoutUserQueueInfos(team, queueKey);
 
         String matchId = createMatch(queueKey, queueInfo, team);
 
@@ -200,7 +200,7 @@ public class MatchingEngineService {
                 notificationService.sendDeclineMatch(participant.userId(), matchId,
                         MatchDeclineResponse.Status.CANCELLED);
                 queueService.rejoinQueue(participant.userId(), matchStatusInfo.queueKey(),
-                        participant.score(), participant.infos());
+                        participant.score());
             } else {
                 notificationService.sendDeclineMatch(participant.userId(), matchId,
                         MatchDeclineResponse.Status.REJECTED);
@@ -247,19 +247,10 @@ public class MatchingEngineService {
         String userId = user.getUserId();
         double score = user.getScore();
         String nickname = userInfoHelper.getNickname(userId);
-        String userInfo = convertUserInfoToString(user.getUserInfo());
 
 
-        return MatchParticipant.builder().userId(userId).score(score).nickname(nickname).infos(userInfo).build();
+        return MatchParticipant.builder().userId(userId).score(score).nickname(nickname).build();
     }
 
-    private String convertUserInfoToString(Map<String, Object> userInfo) {
-        try {
-            Map<String, Object> wrapper = Map.of("userInfo", userInfo);
-            return objectMapper.writeValueAsString(wrapper);
-        } catch (JsonProcessingException e) {
-            throw new UserQueueInfoParsingException(MatchingErrorCode.INVALID_QUEUE_USER_INFO_FORMAT);
-        }
-    }
 }
 

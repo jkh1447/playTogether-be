@@ -21,6 +21,6 @@ public class AIData implements GameDataComponent {
       GameConditionDto.builder().id("groupSize").label("인원").type("select")
         .options(List.of("상관없음", "2", "3", "4", "5", "6", "7", "8", "9", "10")).defaultValue("2").build()
     );
-    return GameInfo.builder().id(AIConstants.GAME_ID).name("AI 매칭").playerCount("2~10").description("AI를 이용하여 목록에 없는 게임큐에 참가하세요!\n (토큰 소진시 제대로 작동하지 않을 수 있습니다.)").conditions(aiConditions).build();
+    return GameInfo.builder().id(AIConstants.GAME_ID).name("AI 매칭").playerCount("2~10").description("AI를 이용하여 목록에 없는 게임큐에 참가하세요!").conditions(aiConditions).build();
   }
 }

@@ -1,5 +1,6 @@
 package com.jkh1447.MyProject.service.matching;
 
+import java.time.Duration;
 import java.util.UUID;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
@@ -12,6 +13,9 @@ import com.jkh1447.MyProject.domain.matching.MatchingConstants;
 import com.jkh1447.MyProject.dto.matching.MatchDeclineResponse;
 import com.jkh1447.MyProject.dto.matching.MatchParticipant;
 import com.jkh1447.MyProject.dto.matching.MatchStatusInfo;
+import com.jkh1447.MyProject.global.exception.TooManyRequestException;
+import com.jkh1447.MyProject.domain.matching.exception.AlreadyInQueueException;
+import java.util.Map;
 
 @Slf4j
 @Service
@@ -27,6 +31,17 @@ public class MatchingService {
 
     public void joinQueue(String userId, MatchingRequest request) {
         
+        Boolean acquired = redisTemplate.opsForValue().setIfAbsent("lock:join:" + userId, "true", Duration.ofSeconds(1));
+
+        if(Boolean.FALSE.equals(acquired)) {
+            throw new TooManyRequestException();
+        }
+
+        Boolean isUserInQueue = queueService.isUserInQueue(userId);
+        if(isUserInQueue) {
+            throw new AlreadyInQueueException();
+        }
+        
         MatchStrategy strategy = strategyFactory.getStrategy(request.gameName());
         String queueKey = strategy.generateQueueKey(request);
         String queueUserInfos = strategy.getQueueUserInfos(request);
@@ -35,6 +50,13 @@ public class MatchingService {
     }
 
     public void leaveQueue(String userId, MatchingRequest request) {
+
+        Boolean acquired = redisTemplate.opsForValue().setIfAbsent("lock:leave:" + userId, "true", Duration.ofSeconds(1));
+
+        if(Boolean.FALSE.equals(acquired)) {
+            throw new TooManyRequestException();
+        }
+
         MatchStrategy strategy = strategyFactory.getStrategy(request.gameName());
         String queueKey = strategy.generateQueueKey(request);
 
@@ -84,6 +106,7 @@ public class MatchingService {
 
         // 방 생성 & roomStatus 생성
         roomService.createRoom(roomId, statusInfo.participants());
+        log.info("매치 참가자들: {}", statusInfo);
 
         // 모든 참가자들에게 방 이동 알림
         for (String userId : statusInfo.getParticipantIds()) {
@@ -92,6 +115,9 @@ public class MatchingService {
 
         // 매칭 상태 삭제
         matchStatusService.deleteMatchStatus(matchId);
+
+        // 큐 정보 삭제
+        queueService.removeUsersFromQueueInfos(statusInfo.getParticipantIds());
 
         log.info("✅ [매칭 성사] matchId: {}, roomId: {}", matchId, roomId);
     }
@@ -127,10 +153,11 @@ public class MatchingService {
             if (participantId.equals(rejectUserId)) {
                 notificationService.sendDeclineMatch(participantId, matchId,
                         MatchDeclineResponse.Status.REJECTED);
+                queueService.removeUserFromQueueInfos(participantId);
             } else {
                 notificationService.sendDeclineMatch(participantId, matchId,
                         MatchDeclineResponse.Status.CANCELLED);
-                queueService.rejoinQueue(participantId, statusInfo.queueKey(), participant.score(), participant.infos());
+                queueService.rejoinQueue(participantId, statusInfo.queueKey(), participant.score());
             }
         }
     }

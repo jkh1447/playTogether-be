@@ -66,6 +66,7 @@ public class AIStrategy implements MatchStrategy {
       // 나중에 예외처리
       throw new UserQueueInfoParsingException(MatchingErrorCode.INVALID_QUEUE_USER_INFO_FORMAT);
     }
+
   }
 
   @Override
