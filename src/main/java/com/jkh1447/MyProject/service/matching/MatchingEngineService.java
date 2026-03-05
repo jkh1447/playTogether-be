@@ -204,6 +204,7 @@ public class MatchingEngineService {
             } else {
                 notificationService.sendDeclineMatch(participant.userId(), matchId,
                         MatchDeclineResponse.Status.REJECTED);
+                queueService.removeUserFromQueueInfos(participant.userId());
             }
         }
 

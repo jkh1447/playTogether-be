@@ -31,7 +31,7 @@ public class MatchStatusService {
 
     private final RedisTemplate<String, Object> redisTemplate;
 
-    private final RedisScript<Long> incrementAcceptCountScript;
+    private final RedisScript<List> incrementAcceptCountScript;
     private final RedisScript<List> processMatchTimeoutScript;
 
     private final StringRedisTemplate stringRedisTemplate;
@@ -132,12 +132,10 @@ public class MatchStatusService {
      * 
      * @return 1: 매칭 성사, 0: 매칭 진행중, -1: 중복 수락, -2: 매칭 없음
      */
-    public Long incrementAcceptCount(String matchId, String userId) {
+    public List<Object> incrementAcceptCount(String matchId, String userId) {
         String statusKey = buildStatusKey(matchId);
 
-        Long result = redisTemplate.execute(incrementAcceptCountScript, List.of(statusKey), // KEYS[1]
-                userId // ARGV[1]
-        );
+        List<Object> result = stringRedisTemplate.execute(incrementAcceptCountScript, List.of(statusKey), userId);
 
         return result;
     }

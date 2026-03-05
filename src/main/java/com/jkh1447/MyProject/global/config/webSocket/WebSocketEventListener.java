@@ -11,6 +11,7 @@ import com.jkh1447.MyProject.service.chating.ChatMessageSenderService;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.stereotype.Component;
 import com.jkh1447.MyProject.dto.chating.ParticipantsDto;
+import com.jkh1447.MyProject.service.matching.MatchQueueService;
 import com.jkh1447.MyProject.service.matching.MatchingService;
 
 import lombok.RequiredArgsConstructor;
@@ -24,6 +25,7 @@ public class WebSocketEventListener {
     private final ChatRoomService chatRoomService;
     private final ChatMessageSenderService chatMessageSenderService;
     private final MatchingService matchingService;
+    private final MatchQueueService matchQueueService;
 
     // 웹소켓 연결이 끊어졌을 때 실행(비정상 종료, 브라우저 종료)
     @EventListener
@@ -38,6 +40,8 @@ public class WebSocketEventListener {
 
         if (userId != null) {
             matchingService.removeUserFromQueue(userId); // 큐 돌리는 도중 비정상 종료된 유저를 큐에서 제거
+            String queueKey = matchQueueService.getUserQueue(userId);
+            matchQueueService.cleanQueueIfEmpty(queueKey);
         }
 
         if (roomId != null && userId != null) {

@@ -16,7 +16,6 @@ import org.springframework.web.socket.server.support.HttpSessionHandshakeInterce
 import com.jkh1447.MyProject.domain.matching.MatchingConstants;
 import com.jkh1447.MyProject.dto.chating.ChatMessageDto;
 import com.jkh1447.MyProject.dto.chating.ParticipantsDto;
-import com.jkh1447.MyProject.global.config.StompHandler;
 import org.springframework.messaging.Message;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -28,6 +27,7 @@ import com.jkh1447.MyProject.service.chating.ChatRoomService;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.context.annotation.Lazy;
+import com.jkh1447.MyProject.global.config.ServerConfig;
 
 @Slf4j
 @Configuration
@@ -35,9 +35,13 @@ import org.springframework.context.annotation.Lazy;
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     private final StompHandler stompHandler;
+    private final ServerConfig serverConfig;
+    private final HandshakeAuthInterceptor handshakeAuthInterceptor;
 
-    public WebSocketConfig(@Lazy StompHandler stompHandler) {
+    public WebSocketConfig(@Lazy StompHandler stompHandler, ServerConfig serverConfig, HandshakeAuthInterceptor handshakeAuthInterceptor) {
         this.stompHandler = stompHandler;
+        this.serverConfig = serverConfig;
+        this.handshakeAuthInterceptor = handshakeAuthInterceptor;
     }
 
     @Override
@@ -57,8 +61,8 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         // 배포시 cors설정
-        registry.addEndpoint("/ws-matching").setAllowedOriginPatterns("*")
-                .addInterceptors(new HttpSessionHandshakeInterceptor());
+        registry.addEndpoint("/ws-matching").setAllowedOriginPatterns(serverConfig.getUrl())
+                .addInterceptors(handshakeAuthInterceptor);
     }
 
     // 구독 연결시 실행

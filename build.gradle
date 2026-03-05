@@ -50,6 +50,7 @@ tasks.named('test') {
 
 tasks.withType(JavaCompile) {
 	options.encoding = 'UTF-8'
+	options.compilerArgs << '-parameters'
 }
 
 tasks.withType(Javadoc) {

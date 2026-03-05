@@ -3,6 +3,8 @@ package com.jkh1447.MyProject.service.matching;
 import org.springframework.stereotype.Service;
 import com.jkh1447.MyProject.domain.matching.MatchingConstants;
 import com.jkh1447.MyProject.dto.matching.MatchParticipant;
+import com.jkh1447.MyProject.domain.chating.Room;
+import com.jkh1447.MyProject.repository.room.RoomRepository;
 import lombok.extern.slf4j.Slf4j;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -10,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.time.Duration;
 import java.util.HashMap;
+import java.util.ArrayList;
 
 @Slf4j
 @Service
@@ -24,6 +27,7 @@ public class RoomService {
      */
     
     private final RedisTemplate<String, Object> redisTemplate;
+    private final RoomRepository roomRepository;
 
     /*
      * roomStatus 생성
@@ -34,9 +38,18 @@ public class RoomService {
         String roomStatusKey = buildRoomStatusKey(roomId);
 
         Map<String, Object> roomStatus = new HashMap<>();
+        List<String> participantsList = new ArrayList<>();
         for(MatchParticipant participant: participants) {
             roomStatus.put(participant.userId(), participant.nickname());
+            participantsList.add(participant.userId());
         }
+
+        Room room = Room.builder()
+                .roomId(roomId)
+                .participants(participantsList)
+                .build();
+
+        roomRepository.save(room);
 
         redisTemplate.opsForHash().putAll(roomStatusKey, roomStatus);
         redisTemplate.expire(roomStatusKey, Duration.ofSeconds(MatchingConstants.ROOM_EXPIRE_SECONDS));

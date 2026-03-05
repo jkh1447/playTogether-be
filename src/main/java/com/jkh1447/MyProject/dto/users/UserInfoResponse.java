@@ -8,9 +8,10 @@ import com.jkh1447.MyProject.domain.auth.Role;
 public record UserInfoResponse(
     String nickname,
     Role role,
-    String userId
+    String userId,
+    String email
 ) {
     public static UserInfoResponse from(Users user) {
-        return new UserInfoResponse(user.getNickname(), user.getRole(), user.getId().toString());
+        return new UserInfoResponse(user.getNickname(), user.getRole(), user.getId().toString(), user.getEmail());
     }
 }

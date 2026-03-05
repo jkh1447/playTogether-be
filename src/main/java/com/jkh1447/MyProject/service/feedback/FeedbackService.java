@@ -34,6 +34,11 @@ public class FeedbackService {
         throw new TooManyRequestException();
     }
 
+    if (feedbackDto.getTitle().length() > 50 || feedbackDto.getContent().length() > 2000) {
+        throw new IllegalArgumentException("제목은 50자, 내용은 2000자 이내여야 합니다.");
+    }
+
+
     Feedback feedback = Feedback.builder()
     .category(feedbackDto.getCategory())
     .title(feedbackDto.getTitle())

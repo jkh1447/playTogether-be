@@ -25,6 +25,7 @@ import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.data.redis.core.script.RedisScript;
 import com.jkh1447.MyProject.service.matching.aiMatching.AIMatchingService;
 import com.fasterxml.jackson.core.type.TypeReference;
+import org.springframework.data.redis.core.StringRedisTemplate;
 
 @Slf4j
 @Service
@@ -53,21 +54,27 @@ public class MatchQueueService {
      */
     
     private final RedisTemplate<String, Object> redisTemplate;
+    private final StringRedisTemplate stringRedisTemplate;
     private final ObjectMapper objectMapper;
 
     private final RedisScript<Long> removeUserFromQueueScript;
     private final RedisScript<Long> removeUsersFromQueueScript;
     private final RedisScript<Long> removeUsersFromQueueWithoutUserQueueInfosScript;
     private final RedisScript<Long> removeUsersFromQueueInfosScript;
+    private final RedisScript<Long> cleanQueueScript;
+    private final RedisScript<Long> addUserToQueueScript;
     private final GameAliasRepository gameAliasRepository;
     private final AIMatchingService geminiService;
     
     public void addToQueue(String userId, String queueKey, String queueUserInfos) {
         double score = System.currentTimeMillis();
 
-        redisTemplate.opsForZSet().add(queueKey, userId, score);
-        redisTemplate.opsForHash().put(MatchingConstants.USER_QUEUE_STATUS_KEY, userId, queueKey); // 유저가 어느 큐에 있는지 저장
-        redisTemplate.opsForHash().put(MatchingConstants.USER_QUEUE_INFOS_KEY, userId, queueUserInfos); // 유저의 큐에 대한 정보(필터) 저장
+        List<String> keys = List.of(queueKey, MatchingConstants.USER_QUEUE_STATUS_KEY, MatchingConstants.USER_QUEUE_INFOS_KEY);
+        redisTemplate.execute(addUserToQueueScript, keys, userId, score, queueUserInfos, queueKey);
+
+        // redisTemplate.opsForZSet().add(queueKey, userId, score);
+        // redisTemplate.opsForHash().put(MatchingConstants.USER_QUEUE_STATUS_KEY, userId, queueKey); // 유저가 어느 큐에 있는지 저장
+        // redisTemplate.opsForHash().put(MatchingConstants.USER_QUEUE_INFOS_KEY, userId, queueUserInfos); // 유저의 큐에 대한 정보(필터) 저장
         
         if (queueKey.contains(MatchingConstants.MATCH_GROUP_SIZE + "=" + MatchingConstants.ANY_GROUP_SIZE)) {
             redisTemplate.opsForSet().add(MatchingConstants.ACTIVE_ANY_QUEUE_KEY, queueKey);
@@ -83,8 +90,8 @@ public class MatchQueueService {
     public void removeUserFromQueue(String userId, String queueKey) {
 
         List<String> keys = List.of(queueKey, MatchingConstants.USER_QUEUE_STATUS_KEY, MatchingConstants.USER_QUEUE_INFOS_KEY);
-        redisTemplate.opsForSet().remove(MatchingConstants.ACTIVE_QUEUES_KEY, queueKey);
-        redisTemplate.opsForSet().remove(MatchingConstants.ACTIVE_ANY_QUEUE_KEY, queueKey);
+        // redisTemplate.opsForSet().remove(MatchingConstants.ACTIVE_QUEUES_KEY, queueKey);
+        // redisTemplate.opsForSet().remove(MatchingConstants.ACTIVE_ANY_QUEUE_KEY, queueKey);
         redisTemplate.execute(removeUserFromQueueScript, keys, userId);
         
 
@@ -122,13 +129,9 @@ public class MatchQueueService {
     }
 
     public void cleanQueueIfEmpty(String queueKey) {
-        Long size = getQueueSize(queueKey);
-        if (size == null || size == 0) {
-            redisTemplate.opsForSet().remove(MatchingConstants.ACTIVE_QUEUES_KEY, queueKey);
-            redisTemplate.opsForSet().remove(MatchingConstants.ACTIVE_ANY_QUEUE_KEY, queueKey);
-            log.debug("[큐 정리] 빈 큐 제거: {}", queueKey);
-        }
-    }
+        List<String> keys = List.of(queueKey, MatchingConstants.ACTIVE_QUEUES_KEY, MatchingConstants.ACTIVE_ANY_QUEUE_KEY);
+        redisTemplate.execute(cleanQueueScript, keys, queueKey);
+    } 
 
     public void rejoinQueue(String userId, String queueKey, double score){
         redisTemplate.opsForZSet().add(queueKey, userId, score);
@@ -231,4 +234,6 @@ public class MatchQueueService {
     public boolean isUserInQueue(String userId){
         return redisTemplate.opsForHash().hasKey(MatchingConstants.USER_QUEUE_STATUS_KEY, userId);
     }
+
+    
 }

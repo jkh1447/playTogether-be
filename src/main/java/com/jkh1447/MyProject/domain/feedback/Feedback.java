@@ -6,6 +6,8 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.Getter;
@@ -26,8 +28,9 @@ public class Feedback {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
+  @Enumerated(EnumType.STRING)
   @Column(nullable = false)
-  private String category; // bug, feature, improve, other
+  private FeedbackCategory category;
 
   @Column(nullable = false, length = 100)
   private String title;
@@ -43,7 +46,7 @@ public class Feedback {
   private LocalDateTime createdAt;
 
   @Builder
-    public Feedback(String category, String title, String content, String userId) {
+    public Feedback(FeedbackCategory category, String title, String content, String userId) {
         this.category = category;
         this.title = title;
         this.content = content;

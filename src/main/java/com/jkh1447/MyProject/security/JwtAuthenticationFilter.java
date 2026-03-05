@@ -17,7 +17,9 @@ import com.jkh1447.MyProject.domain.auth.AuthConstants;
 
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
+    
     private final JwtUtil jwtUtil;
+    private final ObjectMapper objectMapper;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
@@ -50,7 +52,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         ApiResponse<?> apiResponse = ApiResponse.fail(errorCode.name(), errorCode.getMessage());
 
-        String json = new ObjectMapper().writeValueAsString(apiResponse);
+        String json = objectMapper.writeValueAsString(apiResponse);
         response.getWriter().write(json);
     }
 }

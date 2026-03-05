@@ -2,6 +2,7 @@ package com.jkh1447.MyProject.service.chating;
 
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.web.util.HtmlUtils;
 import com.jkh1447.MyProject.domain.matching.MatchingConstants;
 import com.jkh1447.MyProject.dto.chating.ChatMessageDto;
 
@@ -20,19 +21,33 @@ public class ChatingService {
     public ChatMessageDto createChatMessageDto(String roomId, ChatMessageDto chatMessage) {
         
         String roomKey = MatchingConstants.ROOM_STATUS_KEY + roomId;
-
         ChatMessageDto message = null;
+
+        String safeNickname = HtmlUtils.htmlEscape(chatMessage.senderNickname());
+        String senderId = chatMessage.senderId();
+
 
         switch(chatMessage.type()) {
             case ENTER:
-                message = ChatMessageDto.createEnterMessage(roomId, chatMessage.senderId(), chatMessage.senderNickname());
+                message = ChatMessageDto.createEnterMessage(roomId, senderId, safeNickname);
                 break;
             case TALK:
-                message = ChatMessageDto.createTalkMessage(roomId, chatMessage.senderId(), chatMessage.senderNickname(), chatMessage.content());
+                String rawContent = chatMessage.content();
+                if (rawContent == null || rawContent.trim().isEmpty()) {
+                    // 예외 바꾸기
+                    throw new IllegalArgumentException("메시지 내용이 비어있습니다.");
+                }
+
+                if (rawContent.length() > 1000) {
+                    throw new IllegalArgumentException("메시지는 1000자 이하로 입력해주세요.");
+                }
+
+                String safeContent = HtmlUtils.htmlEscape(rawContent);
+                message = ChatMessageDto.createTalkMessage(roomId, senderId, safeNickname, safeContent);
                 break;
             case LEAVE:
-                message = ChatMessageDto.createLeaveMessage(roomId, chatMessage.senderId(), chatMessage.senderNickname());
-                chatRoomService.removeParticipant(roomId, chatMessage.senderId());
+                message = ChatMessageDto.createLeaveMessage(roomId, senderId, safeNickname);
+                chatRoomService.removeParticipant(roomId, senderId);
                 chatMessageSenderService.sendParticipants(roomId);
                 break;
         }        

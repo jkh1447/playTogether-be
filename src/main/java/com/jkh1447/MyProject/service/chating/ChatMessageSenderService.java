@@ -7,7 +7,9 @@ import com.jkh1447.MyProject.dto.chating.ChatMessageDto;
 import com.jkh1447.MyProject.dto.chating.ParticipantsDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Lazy;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ChatMessageSenderService {
@@ -23,6 +25,7 @@ public class ChatMessageSenderService {
 
     public void sendLeaveMessage(String roomId, String userId, String nickname) {
         ChatMessageDto leaveMessage = ChatMessageDto.createLeaveMessage(roomId, userId, nickname);
+        log.info("[나가기 메세지 전송] 방 {}, 유저 {}, 메세지 {}", roomId, userId, leaveMessage);
         messagingTemplate.convertAndSend(ChatingConstants.SUB_ROOM_PATH + roomId, leaveMessage);
     }
 
@@ -33,5 +36,6 @@ public class ChatMessageSenderService {
 
     public void sendChatMessage(String roomId, ChatMessageDto chatMessage) {
         messagingTemplate.convertAndSend(ChatingConstants.SUB_ROOM_PATH + roomId, chatMessage);
+        log.info("채팅 메세지 전송: 방 {}, 메세지 {}", roomId, chatMessage);
     }
 }

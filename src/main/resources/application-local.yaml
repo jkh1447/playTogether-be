@@ -8,7 +8,13 @@ spring:
     redis:
       host: ${REDIS_HOST}
       port: ${REDIS_PORT}
-      
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
 
   security:
     oauth2:
@@ -30,7 +36,7 @@ spring:
             scope:
               - name
               - email
-            
+
         provider:
           naver:
             authorization-uri: https://nid.naver.com/oauth2.0/authorize

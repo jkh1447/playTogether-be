@@ -16,7 +16,7 @@ import com.jkh1447.MyProject.service.auth.CustomOAuth2UserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import jakarta.servlet.http.HttpServletResponse;
-
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 
 @Configuration
@@ -28,6 +28,7 @@ public class SecurityConfig {
     private final ServerConfig serverConfig;
     private final CustomOAuth2UserService customOAuth2UserService;
     private final OAuth2SuccessHandler oAuth2SuccessHandler;
+    private final ObjectMapper objectMapper;
 
     @Bean
     public BCryptPasswordEncoder passwordEncoder() {
@@ -48,7 +49,7 @@ public class SecurityConfig {
                 }))
                 // 2. CSRF 비활성화 (Rest API 방식은 세션을 쓰지 않으므로 끕니다)
                 .csrf(csrf -> csrf.disable())
-                .addFilterBefore(new JwtAuthenticationFilter(jwtUtil), UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(new JwtAuthenticationFilter(jwtUtil, objectMapper), UsernamePasswordAuthenticationFilter.class)
                 // 3. 경로별 권한 설정
                 .exceptionHandling(exception -> exception
                         // 인증되지 않은 사용자가 접근했을 때 401을 반환하도록 설정
@@ -65,7 +66,8 @@ public class SecurityConfig {
                         .successHandler(oAuth2SuccessHandler)
                 )
                 .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .requestCache(requestCache -> requestCache.disable());
 
         return http.build();
     }

@@ -16,6 +16,7 @@ import com.jkh1447.MyProject.dto.matching.MatchStatusInfo;
 import com.jkh1447.MyProject.global.exception.TooManyRequestException;
 import com.jkh1447.MyProject.domain.matching.exception.AlreadyInQueueException;
 import java.util.Map;
+import java.util.List;
 
 @Slf4j
 @Service
@@ -69,35 +70,37 @@ public class MatchingService {
 
     public void acceptMatch(String userId, String matchId) {
 
-        Long result = matchStatusService.incrementAcceptCount(matchId, userId);
+        List<Object> result = matchStatusService.incrementAcceptCount(matchId, userId);
 
         if (result == null) {
             // 이미 삭제된 경우
             return;
         }
 
-        if (result == -1) {
+        String status = (String) result.get(0);
+
+        if (status.equals("-1")) {
             log.warn("[수락 실패] 이미 수락했거나 만료된 매칭. userId: {}, matchId: {}", userId, matchId);
             return;
         }
-        if (result == -2) {
+        if (status.equals("-2")) {
             log.warn("[수락 실패] 매칭이 존재하지 않습니다. userId: {}, matchId: {}", userId, matchId);
             return;
         }
-        if (result == 0) {
+        if (status.equals("PENDING")) {
             log.info("[매칭 진행중] userId: {}, matchId: {}", userId, matchId);
             return;
         }
 
-        if (result == 1) {
-            MatchStatusInfo statusInfo = matchStatusService.getMatchStatus(matchId);
-            if (statusInfo == null) {
-                log.warn("⚠️ 만료되었거나 존재하지 않는 매칭입니다: {}", matchId);
-                return;
-            }
 
-            completeMatch(matchId, statusInfo);
+        MatchStatusInfo statusInfo = matchStatusService.getMatchStatus(result);
+        if (statusInfo == null) {
+            log.warn("⚠️ 만료되었거나 존재하지 않는 매칭입니다: {}", matchId);
+            return;
         }
+
+        completeMatch(matchId, statusInfo);
+    
 
     }
 
@@ -132,6 +135,7 @@ public class MatchingService {
 
         MatchStatusInfo statusInfo = matchStatusService.getMatchStatus(matchId);
         if (statusInfo == null) {
+            // 중간에 timeout이 끼어들어 경합상태가 생길경우에는, 그냥 타임아웃 처리
             log.warn("⚠️ 만료되었거나 존재하지 않는 매칭입니다: {}", matchId);
             return;
         }
