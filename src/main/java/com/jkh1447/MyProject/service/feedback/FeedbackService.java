@@ -7,6 +7,7 @@ import com.jkh1447.MyProject.repository.feedback.feedbackRepository;
 import com.jkh1447.MyProject.dto.feedback.FeedbackDto;
 import com.jkh1447.MyProject.global.exception.TooManyRequestException;
 import com.jkh1447.MyProject.domain.feedback.Feedback;
+import com.jkh1447.MyProject.domain.feedback.FeedbackConstants;
 import java.time.LocalDateTime;
 import org.springframework.data.redis.core.RedisTemplate;
 import java.time.Duration;
@@ -35,7 +36,7 @@ public class FeedbackService {
     }
 
     if (feedbackDto.getTitle().length() > 50 || feedbackDto.getContent().length() > 2000) {
-        throw new IllegalArgumentException("제목은 50자, 내용은 2000자 이내여야 합니다.");
+        throw new IllegalArgumentException(FeedbackConstants.TITLE_AND_CONTENT_LENGTH_LIMIT_MESSAGE);
     }
 
 

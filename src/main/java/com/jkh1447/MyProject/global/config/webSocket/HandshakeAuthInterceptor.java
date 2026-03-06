@@ -13,6 +13,7 @@ import com.jkh1447.MyProject.domain.auth.AuthConstants;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import com.jkh1447.MyProject.service.matching.UserInfoHelper;
+import com.jkh1447.MyProject.global.utility.NetworkUtil;
 
 @Component
 @RequiredArgsConstructor
@@ -37,9 +38,15 @@ public class HandshakeAuthInterceptor implements HandshakeInterceptor {
         jwtUtil.validateToken(token);
         String userId = jwtUtil.getSubjectFromToken(token);
         String nickname = userInfoHelper.getNickname(userId);
+        String clientIp = NetworkUtil.getClientIp(httpRequest);
+        String userAgent = httpRequest.getHeader("User-Agent");
+
+        // userId, nickname, clientIp를 추출해 세션에 저장한다.
 
         attributes.put("userId", userId);
         attributes.put("nickname", nickname);
+        attributes.put("clientIp", clientIp);
+        attributes.put("userAgent", userAgent);
         return true;
       }
       catch (Exception e) {

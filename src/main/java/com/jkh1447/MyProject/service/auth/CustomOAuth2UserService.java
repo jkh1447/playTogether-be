@@ -31,20 +31,16 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
     }
 
     private Users saveOrUpdate(OAuth2UserInfo userInfo) {
-        Users user = userRepository.findByProviderAndProviderId(userInfo.getProvider(), userInfo.getProviderId())
+        Users user = userRepository
+                .findByProviderAndProviderId(userInfo.getProvider(), userInfo.getProviderId())
                 .map(entity -> {
                     entity.updateLastLoginAt();
                     entity.updateInfo(userInfo.getEmail(), userInfo.getNickname());
                     return entity;
-                })
-                .orElseGet(() -> {
-                    return Users.builder()
-                            .provider(userInfo.getProvider())
-                            .providerId(userInfo.getProviderId())
-                            .email(userInfo.getEmail())
-                            .nickname(userInfo.getNickname())
-                            .role(Role.USER)
-                            .build();
+                }).orElseGet(() -> {
+                    return Users.builder().provider(userInfo.getProvider())
+                            .providerId(userInfo.getProviderId()).email(userInfo.getEmail())
+                            .nickname(userInfo.getNickname()).role(Role.ROLE_USER).build();
                 });
         return userRepository.save(user);
     }

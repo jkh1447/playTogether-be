@@ -39,20 +39,17 @@ public class UsersController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
         String name = authentication.getName();
-        
+
         log.info("name: {}", name);
-        if(name.startsWith(AuthConstants.GUEST_TOKEN_PREFIX)) { // 게스트인 경우
+        if (name.startsWith(AuthConstants.GUEST_TOKEN_PREFIX)) { // 게스트인 경우
             String guestIdPart = name.split("_")[1].substring(0, 4);
-            UserInfoResponse response = UserInfoResponse.builder()
-                    .role(Role.GUEST)
+            UserInfoResponse response = UserInfoResponse.builder().role(Role.ROLE_GUEST)
                     .nickname(AuthConstants.GUEST_NICKNAME_PREFIX + guestIdPart)
-                    .userId(authentication.getName())
-                    .email("guest")
-                    .build();
+                    .userId(authentication.getName()).email("guest").build();
             return ResponseEntity.ok(ApiResponse.success(response));
         }
         Long userId = Long.parseLong(name);
-        
+
         UserInfoResponse response = usersService.getMyInfo(userId);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
@@ -60,20 +57,20 @@ public class UsersController {
 
     @DeleteMapping("/me")
     public ResponseEntity<?> withdraw(Authentication authentication, HttpServletResponse response) {
-        
+
         usersService.withdraw(authentication);
 
-        ResponseCookie accessTokenCookie = ResponseCookie.from(AuthConstants.TOKEN_NAME, "").httpOnly(true)
-				.secure(jwtConfig.isCookieSecure()).path("/").maxAge(0)
-				.sameSite(jwtConfig.getCookieSameSite()).build();
+        ResponseCookie accessTokenCookie = ResponseCookie.from(AuthConstants.TOKEN_NAME, "")
+                .httpOnly(true).secure(jwtConfig.isCookieSecure()).path("/").maxAge(0)
+                .sameSite(jwtConfig.getCookieSameSite()).build();
 
-		ResponseCookie refreshTokenCookie =
-				ResponseCookie.from(AuthConstants.REFRESH_TOKEN_NAME, "").httpOnly(true)
-						.secure(jwtConfig.isCookieSecure()).path("/").maxAge(0) // 즉시 만료
-						.sameSite(jwtConfig.getCookieSameSite()).build();
+        ResponseCookie refreshTokenCookie =
+                ResponseCookie.from(AuthConstants.REFRESH_TOKEN_NAME, "").httpOnly(true)
+                        .secure(jwtConfig.isCookieSecure()).path("/").maxAge(0) // 즉시 만료
+                        .sameSite(jwtConfig.getCookieSameSite()).build();
 
-		response.addHeader(HttpHeaders.SET_COOKIE, accessTokenCookie.toString());
-		response.addHeader(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString());
+        response.addHeader(HttpHeaders.SET_COOKIE, accessTokenCookie.toString());
+        response.addHeader(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString());
 
         return ResponseEntity.ok(ApiResponse.success(null));
     }

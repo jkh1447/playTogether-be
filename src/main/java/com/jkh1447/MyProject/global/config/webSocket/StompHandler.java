@@ -3,6 +3,7 @@ package com.jkh1447.MyProject.global.config.webSocket;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.MessageDeliveryException;
+import org.springframework.messaging.simp.config.AbstractMessageBrokerConfiguration;
 import org.springframework.messaging.simp.stomp.StompCommand;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.ChannelInterceptor;
@@ -42,8 +43,13 @@ public class StompHandler implements ChannelInterceptor {
 
         // 소켓 연결 메세지인 경우
         if (StompCommand.CONNECT.equals(accessor.getCommand())) {
+
+         
+
             String userId = accessor.getSessionAttributes().get("userId").toString();
             String nickname = accessor.getSessionAttributes().get("nickname").toString();
+            
+
             log.info("소켓 연결: {}, {}", userId, nickname);
         }
         // 구독 메세지인 경우

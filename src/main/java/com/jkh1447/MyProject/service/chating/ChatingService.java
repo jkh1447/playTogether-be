@@ -5,9 +5,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.util.HtmlUtils;
 import com.jkh1447.MyProject.domain.matching.MatchingConstants;
 import com.jkh1447.MyProject.dto.chating.ChatMessageDto;
-
+import com.jkh1447.MyProject.repository.chating.ChatMessageRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.jkh1447.MyProject.domain.chating.ChatMessage;
+import com.jkh1447.MyProject.domain.chating.ChatingConstants;
 
 @Slf4j
 @Service
@@ -17,6 +19,7 @@ public class ChatingService {
     private final RedisTemplate<String, String> redisTemplate;
     private final ChatRoomService chatRoomService;
     private final ChatMessageSenderService chatMessageSenderService;
+    private final ChatMessageRepository chatMessageRepository;
 
     public ChatMessageDto createChatMessageDto(String roomId, ChatMessageDto chatMessage) {
         
@@ -34,12 +37,11 @@ public class ChatingService {
             case TALK:
                 String rawContent = chatMessage.content();
                 if (rawContent == null || rawContent.trim().isEmpty()) {
-                    // 예외 바꾸기
-                    throw new IllegalArgumentException("메시지 내용이 비어있습니다.");
+                    throw new IllegalArgumentException(ChatingConstants.EMPTY_MESSAGE);
                 }
 
-                if (rawContent.length() > 1000) {
-                    throw new IllegalArgumentException("메시지는 1000자 이하로 입력해주세요.");
+                if (rawContent.length() > ChatingConstants.MESSAGE_LENGTH_LIMIT) {
+                    throw new IllegalArgumentException(ChatingConstants.MESSAGE_LENGTH_LIMIT_MESSAGE);
                 }
 
                 String safeContent = HtmlUtils.htmlEscape(rawContent);
@@ -63,4 +65,16 @@ public class ChatingService {
     //         log.info("방이 비어 있어 삭제 처리되었습니다: {}", roomKey);
     //     }
     // }
+    
+    public void saveChatMessage(ChatMessageDto message, String clientIp, String userAgent) {
+        ChatMessage chatMessage = ChatMessage.builder()
+            .roomId(message.roomId())
+            .senderId(message.senderId())
+            .senderNickname(message.senderNickname())
+            .content(message.content())
+            .clientIp(clientIp)
+            .userAgent(userAgent)
+            .build();
+        chatMessageRepository.save(chatMessage);
+    }
 }
