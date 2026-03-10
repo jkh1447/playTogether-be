@@ -4,17 +4,23 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum FeedbackCategory {
-  BUG("bug"), ADD("add"), FEATURE("feature"), IMPROVE("improve"), OTHER("other");
+  BUG("bug", "버그"), ADD("add", "게임 추가 요청"), FEATURE("feature", "기능 요청"), IMPROVE("improve", "개선 사항"), OTHER("other", "기타");
 
   private final String value;
+  private final String label;
 
-  FeedbackCategory(String value) {
+  FeedbackCategory(String value, String label) {
     this.value = value;
+    this.label = label;
   }
 
-  @JsonValue
+  @JsonValue // 서버 -> 클라이언트
   public String getValue() {
     return value;
+  }
+
+  public String getLabel() {
+    return label;
   }
 
   @JsonCreator

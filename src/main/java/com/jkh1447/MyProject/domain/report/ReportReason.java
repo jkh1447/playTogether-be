@@ -14,12 +14,12 @@ public enum ReportReason {
     this.description = description;
   }
 
-  @JsonValue // 객체 -> json 변환 시 사용
+  @JsonValue // 객체 -> json 변환 시 사용, 서버 -> 클라이언트
   public String getDescription() {
     return description;
   }
 
-  @JsonCreator // json -> 객체 변환 시 사용
+  @JsonCreator // json -> 객체 변환 시 사용, 클라이언트 -> 서버
   public static ReportReason fromDescription(String description) {
     for (ReportReason reason : ReportReason.values()) {
       if (reason.description.equals(description)) {

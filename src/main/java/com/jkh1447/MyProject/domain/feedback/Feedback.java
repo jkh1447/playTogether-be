@@ -16,7 +16,6 @@ import lombok.AccessLevel;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import lombok.Builder;
-import com.jkh1447.MyProject.dto.feedback.FeedbackDto;
 
 @Entity
 @Table(name = "feedbacks")
@@ -41,15 +40,24 @@ public class Feedback {
   @Column(nullable = false)
   private String userId; 
 
+  @Enumerated(EnumType.STRING)
+  @Column(nullable = false)
+  private FeedbackStatus status;
+
   @CreatedDate
   @Column(updatable = false)
   private LocalDateTime createdAt;
 
   @Builder
-    public Feedback(FeedbackCategory category, String title, String content, String userId) {
+    public Feedback(FeedbackCategory category, String title, String content, String userId, FeedbackStatus status) {
         this.category = category;
         this.title = title;
         this.content = content;
         this.userId = userId;
+        this.status = status;
     }
+
+  public void setStatus(FeedbackStatus status) {
+    this.status = status;
+  }
 }

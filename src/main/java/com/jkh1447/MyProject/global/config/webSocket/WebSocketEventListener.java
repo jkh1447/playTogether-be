@@ -41,7 +41,9 @@ public class WebSocketEventListener {
         if (userId != null) {
             matchingService.removeUserFromQueue(userId); // 큐 돌리는 도중 비정상 종료된 유저를 큐에서 제거
             String queueKey = matchQueueService.getUserQueue(userId);
-            matchQueueService.cleanQueueIfEmpty(queueKey);
+            if (queueKey != null) {
+                matchQueueService.cleanQueueIfEmpty(queueKey);
+            }
         }
 
         if (roomId != null && userId != null) {
