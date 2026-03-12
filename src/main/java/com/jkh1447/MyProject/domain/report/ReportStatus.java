@@ -3,15 +3,15 @@ package com.jkh1447.MyProject.domain.report;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
-public enum ReportReason {
-  ABUSE("abuse", "욕설 / 비하"),
-  SPAM("spam", "스팸 / 광고"),
-  OTHER("other", "기타");
+public enum ReportStatus {
+  PENDING("pending", "대기"),
+  IN_PROGRESS("in_progress", "진행중"),
+  COMPLETED("completed", "완료");
 
   private final String value;
   private final String label;
 
-  ReportReason(String value, String label) {
+  ReportStatus(String value, String label) {
     this.value = value;
     this.label = label;
   }
@@ -21,17 +21,13 @@ public enum ReportReason {
     return value;
   }
 
-  public String getLabel() {
-    return label;
-  }
-
   @JsonCreator // json -> 객체 변환 시 사용, 클라이언트 -> 서버
-  public static ReportReason fromValue(String description) {
-    for (ReportReason reason : ReportReason.values()) {
-      if (reason.value.equals(description)) {
-        return reason;
+  public static ReportStatus fromValue(String value) {
+    for (ReportStatus status : ReportStatus.values()) {
+      if (status.value.equals(value)) {
+        return status;
       }
     }
-    throw new IllegalArgumentException("비정상적인 입력입니다.");
+    throw new IllegalArgumentException("존재하지 않는 상태입니다: " + value);
   }
 }

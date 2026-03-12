@@ -74,6 +74,9 @@ public class StompHandler implements ChannelInterceptor {
 
             log.info("구독 정보 저장 완료: 방 {}, 구독 ID {}", roomId, subscriptionId);
 
+            if (accessor.getSessionAttributes() == null || accessor.getSessionAttributes().get("nickname") == null || accessor.getSessionAttributes().get("userId") == null) {
+                throw new MessageDeliveryException("세션 정보 저장에 예기치 못한 오류가 발생했습니다.");
+            }
             String nickname = accessor.getSessionAttributes().get("nickname").toString();
             String userId = accessor.getSessionAttributes().get("userId").toString();
     

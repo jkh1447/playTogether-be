@@ -9,6 +9,7 @@ import com.jkh1447.MyProject.repository.user.UserRepository;
 import com.jkh1447.MyProject.security.JwtUtil;
 import java.util.UUID;
 import com.jkh1447.MyProject.domain.auth.RefreshToken;
+import com.jkh1447.MyProject.domain.auth.Role;
 import com.jkh1447.MyProject.domain.auth.AuthConstants;
 import com.jkh1447.MyProject.domain.auth.exception.TokenException;
 import com.jkh1447.MyProject.domain.users.Users;
@@ -105,8 +106,8 @@ public class AuthService {
                 .startsWith(AuthConstants.GUEST_TOKEN_PREFIX)) {
             String subject = jwtUtil.getSubjectFromToken(refreshToken)
                     .replace(AuthConstants.GUEST_TOKEN_PREFIX, "");
-            String guestAccessToken = jwtUtil.generateGuestToken(subject);
-            String guestRefreshToken = jwtUtil.generateGuestRefreshToken(subject);
+            String guestAccessToken = jwtUtil.generateGuestToken(subject, Role.ROLE_GUEST.name());
+            String guestRefreshToken = jwtUtil.generateGuestRefreshToken(subject, Role.ROLE_GUEST.name());
             saveRefreshToken(subject, guestRefreshToken);
             return new TokenDto(guestAccessToken, guestRefreshToken);
         }
@@ -115,8 +116,9 @@ public class AuthService {
                 .orElseThrow(() -> new TokenException(AuthErrorCode.INVALID_TOKEN));
 
         Long userId = Long.valueOf(jwtUtil.getSubjectFromToken(refreshToken));
-        String userAccessToken = jwtUtil.generateToken(userId);
-        String userRefreshToken = jwtUtil.generateRefreshToken(userId);
+        String userRole = jwtUtil.getRoleFromToken(refreshToken);
+        String userAccessToken = jwtUtil.generateToken(userId, userRole);
+        String userRefreshToken = jwtUtil.generateRefreshToken(userId, userRole);
         saveRefreshToken(userId.toString(), userRefreshToken);
 
         return new TokenDto(userAccessToken, userRefreshToken);
@@ -126,12 +128,17 @@ public class AuthService {
     public TokenDto createGuestToken() {
         String guestUuid = UUID.randomUUID().toString();
 
-        String accessToken = jwtUtil.generateGuestToken(guestUuid);
-        String refreshToken = jwtUtil.generateGuestRefreshToken(guestUuid);
+        String accessToken = jwtUtil.generateGuestToken(guestUuid, Role.ROLE_GUEST.name());
+        String refreshToken = jwtUtil.generateGuestRefreshToken(guestUuid, Role.ROLE_GUEST.name());
 
         saveRefreshToken(guestUuid, refreshToken);
 
         return new TokenDto(accessToken, refreshToken);
     }
 
+
+    @Transactional
+    public void updateLastLoginAt(Users user) {
+        user.updateLastLoginAt();
+    }
 }

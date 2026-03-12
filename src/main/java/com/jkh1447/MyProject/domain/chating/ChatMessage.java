@@ -20,7 +20,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 @EntityListeners(AuditingEntityListener.class)
 @Table(name = "chat_messages", indexes = {
   @Index(name = "idx_room_created_at", columnList = "roomId, createdAt"),
-  @Index(name = "idx_chat_created_at", columnList = "createdAt")
+  @Index(name = "idx_preserved_created_at", columnList = "isPreserved, createdAt")
 })
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -48,6 +48,9 @@ public class ChatMessage {
   @Column(length = 512, updatable = false, nullable = true)
   private String userAgent;
 
+  @Column(nullable = false)
+  private Boolean isPreserved = false;
+
   @CreatedDate
   @Column(updatable = false)
   private LocalDateTime createdAt;
@@ -60,6 +63,10 @@ public class ChatMessage {
     this.content = content;
     this.clientIp = clientIp;
     this.userAgent = userAgent;
+  }
+
+  public void preserve() {
+    this.isPreserved = true;
   }
 
 }

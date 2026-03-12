@@ -19,11 +19,12 @@ public class ChatScheduler {
   @Transactional
   public void deleteOldChatLogs() {
       LocalDateTime threeMonthsAgo = LocalDateTime.now().minusMonths(3);
+      LocalDateTime sixMonthsAgo = LocalDateTime.now().minusMonths(6);
       
       log.info("채팅 로그 삭제 스케줄러 시작: {} 이전 데이터 삭제", threeMonthsAgo);
       
       // 3개월 이전 데이터 삭제
-      long deletedCount = chatMessageRepository.deleteByCreatedAtBefore(threeMonthsAgo);
+      long deletedCount = chatMessageRepository.deleteByPolicy(threeMonthsAgo, sixMonthsAgo);
       
       log.info("채팅 로그 삭제 완료. 삭제된 로그 수: {}건", deletedCount);
   }

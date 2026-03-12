@@ -1,9 +1,5 @@
 package com.jkh1447.MyProject.controller.chating;
 
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -12,7 +8,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.jkh1447.MyProject.dto.chating.ParticipantsDto;
 import com.jkh1447.MyProject.global.response.ApiResponse;
-import com.jkh1447.MyProject.domain.matching.MatchingConstants;
 import com.jkh1447.MyProject.service.chating.ChatRoomService;
 import lombok.RequiredArgsConstructor;
 

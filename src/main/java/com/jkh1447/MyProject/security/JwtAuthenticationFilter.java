@@ -40,6 +40,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             sendErrorResponse(response, AuthErrorCode.EXPIRED_TOKEN);
             return;
         } catch (Exception e) {
+            SecurityContextHolder.clearContext();
             sendErrorResponse(response, AuthErrorCode.INVALID_TOKEN);
             return;
         }

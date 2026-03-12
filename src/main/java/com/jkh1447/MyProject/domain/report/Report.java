@@ -32,15 +32,24 @@ public class Report {
     @Column(nullable = false, length = 1000)
     private String detail;        // 신고 내용 (1000자 제한)
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private ReportStatus status;
+
     @CreatedDate
     @Column(updatable = false)
     private LocalDateTime createdAt; // 신고 접수 시간 (운영 확인용)
 
     @Builder
-    public Report(String roomId, String reporterId, ReportReason reason, String detail) {
+    public Report(String roomId, String reporterId, ReportReason reason, String detail, ReportStatus status) {
         this.roomId = roomId;
         this.reporterId = reporterId;
         this.reason = reason;
         this.detail = detail;
+        this.status = status;
+    }
+
+    public void setStatus(ReportStatus status) {
+        this.status = status;
     }
 }

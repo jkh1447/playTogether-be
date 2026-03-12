@@ -2,6 +2,7 @@ package com.jkh1447.MyProject.security;
 
 import org.springframework.stereotype.Component;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -26,6 +27,7 @@ import com.jkh1447.MyProject.domain.auth.exception.NoAuthenticationInfoException
 import com.jkh1447.MyProject.domain.auth.exception.TokenException;
 import com.jkh1447.MyProject.domain.auth.exception.TokenExpiredException;
 import com.jkh1447.MyProject.global.config.JWTConfig;
+import java.util.List;
 
 @Component
 @RequiredArgsConstructor
@@ -34,34 +36,36 @@ public class JwtUtil {
 
     private Key key;
 
+    private final String roleClaimName = "role";
+
     @PostConstruct
     public void init() {
         this.key = Keys.hmacShaKeyFor(jwtConfig.getSecret().getBytes());
     }
 
-    public String buildToken(String subject, long expiration) {
-        return Jwts.builder().setSubject(subject).setIssuedAt(new Date())
+    public String buildToken(String subject, long expiration, String role) {
+        return Jwts.builder().setSubject(subject).claim(roleClaimName, role).setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + expiration))
                 .signWith(key, SignatureAlgorithm.HS256).compact();
     }
 
     // userId는 db의 id임
-    public String generateToken(Long userId) {
-        return buildToken(userId.toString(), jwtConfig.getExpiration());
+    public String generateToken(Long userId, String role) {
+        return buildToken(userId.toString(), jwtConfig.getExpiration(), role);
     }
 
-    public String generateRefreshToken(Long userId) {
-        return buildToken(userId.toString(), jwtConfig.getRefreshExpiration());
+    public String generateRefreshToken(Long userId, String role) {
+        return buildToken(userId.toString(), jwtConfig.getRefreshExpiration(), role);
     }
 
-    public String generateGuestToken(String userId) {
+    public String generateGuestToken(String userId, String role) {
         String subject = AuthConstants.GUEST_TOKEN_PREFIX + userId;
-        return buildToken(subject, jwtConfig.getExpiration());
+        return buildToken(subject, jwtConfig.getExpiration(), role);
     }
 
-    public String generateGuestRefreshToken(String userId) {
+    public String generateGuestRefreshToken(String userId, String role) {
         String subject = AuthConstants.GUEST_TOKEN_PREFIX + userId;
-        return buildToken(subject, jwtConfig.getRefreshExpiration());
+        return buildToken(subject, jwtConfig.getRefreshExpiration(), role);
     }
 
     /**
@@ -91,12 +95,19 @@ public class JwtUtil {
         Claims claims =
                 Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token).getBody();
 
+
+        String role = claims.get(roleClaimName, String.class);
+
+        List<SimpleGrantedAuthority> authorities = new ArrayList<>();
+        if (role != null) {
+            authorities.add(new SimpleGrantedAuthority(role));
+        }
+
         // UserDetails란 스프링 시큐리티가 사용자의 정보를 담는 인터페이스.
-        UserDetails userDetails = new User(claims.getSubject(), "", new ArrayList<>());
+        UserDetails userDetails = new User(claims.getSubject(), "", authorities);
 
         // 최종 신분증인 Authentication을 발급
-        return new UsernamePasswordAuthenticationToken(userDetails, "",
-                userDetails.getAuthorities());
+        return new UsernamePasswordAuthenticationToken(userDetails, "", userDetails.getAuthorities());
     }
 
     // get user's id
@@ -126,5 +137,10 @@ public class JwtUtil {
     public String getSubjectFromToken(String token) {
         return Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token).getBody()
                 .getSubject();
+    }
+
+    public String getRoleFromToken(String token) {
+        return Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token).getBody()
+                .get(roleClaimName, String.class);
     }
 }

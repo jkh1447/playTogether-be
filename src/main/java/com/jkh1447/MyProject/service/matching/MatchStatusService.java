@@ -95,8 +95,14 @@ public class MatchStatusService {
         Object rawGroupSize = entries.get(MatchingConstants.MATCH_GROUP_SIZE);
         Object rawAcceptCount = entries.get(MatchingConstants.MATCH_ACCEPT_COUNT);
         String participantsData = (String) entries.get(MatchingConstants.MATCH_PARTICIPANTS_DATA);
+        if (participantsData != null) {
+            participantsData = participantsData.replace("\"", "");
+        }
         String queueKey = (String) entries.get(MatchingConstants.MATCH_QUEUE_KEY);
-
+        if (queueKey != null) {
+            // 따옴표를 빈 문자열로 치환
+            queueKey = queueKey.replace("\"", ""); 
+        }
         Map<String, String> acceptedUsers = new HashMap<>();
 
         entries.forEach((key, value) -> {
