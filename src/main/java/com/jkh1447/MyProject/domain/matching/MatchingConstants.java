@@ -12,6 +12,7 @@ public class MatchingConstants {
 
     public static final String AI_MATCHING = "AI_MATCHING";
     public static final String AI_USER_INPUT = "userInput";
+    public static final String USER_CREATED_GAME_USER_INPUT = "userInput";
     
     public static final String MATCH_STATUS_KEY = "match:status:";
     public static final String ROOM_STATUS_KEY = "room:status:";

@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component;
 import com.jkh1447.MyProject.domain.gameInfo.GameInfo;
 import com.jkh1447.MyProject.dto.gameInfo.GameConditionDto;
 
-@Component
+// @Component
 public class AIData implements GameDataComponent {
 
   @Override

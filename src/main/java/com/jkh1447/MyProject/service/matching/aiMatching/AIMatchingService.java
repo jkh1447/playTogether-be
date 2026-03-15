@@ -29,8 +29,14 @@ public class AIMatchingService {
 
   public String fetchStandardName(String userInput) {
 
-    String prompt = "Extract the official English game title from: '" + userInput + "'. "
-        + "Rules: 1. Uppercase only. 2. Replace space with '_'. 3. Return ONLY JSON: {\"game\": \"NAME\"}";
+    String prompt = "너는 유저가 입력한 게임 명칭을 공식 한국어 풀네임으로 정규화하는 전문가야. "
+    + "유저 입력: '" + userInput + "'. "
+    + "Rules: "
+    + "1. 사용자가 입력한 게임이름을 검색했을때 가장 사람들이 많이 부르는 이름으로 변환해. "
+    + "2. 모든 공백은 제거해. (예: 리그 오브 레전드 -> 리그오브레전드) "
+    + "3. 결과는 오직 JSON 형식으로만 반환해 (다른 설명 금지). "
+    + "4. 예시: '롤' -> '리그오브레전드', '배그' -> '배틀그라운드', '옵치' -> '오버워치'. "
+    + "{\"game\": \"공식풀네임\"}";
 
     Map<String, Object> body = Map.of(
             "contents", List.of(Map.of("parts", List.of(Map.of("text", prompt))))
