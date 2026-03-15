@@ -2,6 +2,7 @@
 FROM gradle:8.14.3-jdk21 AS builder
 WORKDIR /app
 COPY . .
+RUN chmod +x ./gradlew
 RUN ./gradlew build --no-daemon -x test
 
 # 2단계: 실행 환경 (빌드된 결과물만 가져와서 실행)
