@@ -9,5 +9,6 @@ RUN ./gradlew build --no-daemon -x test
 FROM eclipse-temurin:21-jdk-jammy
 WORKDIR /app
 # 빌더 단계에서 생성된 jar 파일만 가져옴
-COPY --from=builder /app/build/libs/*.jar app.jar
+COPY --from=builder /app/build/libs/*.jar ./
+RUN mv *.jar app.jar
 ENTRYPOINT ["java", "-jar", "app.jar"]
