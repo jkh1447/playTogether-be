@@ -6,7 +6,6 @@ import com.jkh1447.MyProject.domain.chating.ChatingConstants;
 import com.jkh1447.MyProject.dto.chating.ChatMessageDto;
 import com.jkh1447.MyProject.dto.chating.ParticipantsDto;
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.annotation.Lazy;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j

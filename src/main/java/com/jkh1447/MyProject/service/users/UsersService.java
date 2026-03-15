@@ -6,8 +6,6 @@ import lombok.RequiredArgsConstructor;
 import com.jkh1447.MyProject.repository.user.UserRepository;
 import com.jkh1447.MyProject.dto.users.UserInfoResponse;
 import com.jkh1447.MyProject.domain.users.Users;
-import com.jkh1447.MyProject.domain.users.exception.UserException;
-import com.jkh1447.MyProject.domain.users.exception.UserErrorCode;
 import com.jkh1447.MyProject.domain.users.exception.UserNotFoundException;
 import com.jkh1447.MyProject.domain.auth.AuthConstants;
 

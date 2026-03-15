@@ -14,8 +14,6 @@ import com.jkh1447.MyProject.domain.auth.AuthConstants;
 import com.jkh1447.MyProject.domain.auth.exception.TokenException;
 import com.jkh1447.MyProject.domain.users.Users;
 import com.jkh1447.MyProject.dto.auth.TokenDto;
-import com.jkh1447.MyProject.dto.auth.UserLoginRequestDto;
-import com.jkh1447.MyProject.dto.auth.UserSignupRequestDto;
 import com.jkh1447.MyProject.domain.auth.exception.AuthErrorCode;
 
 @Service

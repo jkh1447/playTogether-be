@@ -6,16 +6,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Arrays;
 import java.util.stream.Collectors;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import com.jkh1447.MyProject.dto.matching.MatchParticipant;
 import com.jkh1447.MyProject.dto.matching.MatchStatusInfo;
 import com.jkh1447.MyProject.domain.matching.MatchingConstants;
-import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.data.redis.core.script.RedisScript;
-import org.springframework.data.redis.serializer.StringRedisSerializer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 

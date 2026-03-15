@@ -13,8 +13,6 @@ import com.jkh1447.MyProject.security.JwtAuthenticationFilter;
 import com.jkh1447.MyProject.security.JwtUtil;
 import com.jkh1447.MyProject.security.OAuth2SuccessHandler;
 import com.jkh1447.MyProject.service.auth.CustomOAuth2UserService;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import jakarta.servlet.http.HttpServletResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;

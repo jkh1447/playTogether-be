@@ -2,11 +2,7 @@ package com.jkh1447.MyProject.dto.chating;
 
 import java.time.LocalDateTime;
 
-import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 @Builder
 public record ChatMessageDto(

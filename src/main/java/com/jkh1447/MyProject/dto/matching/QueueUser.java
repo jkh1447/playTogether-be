@@ -3,8 +3,6 @@ package com.jkh1447.MyProject.dto.matching;
 import java.util.HashMap;
 import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -24,6 +22,7 @@ public class QueueUser {
   private String queueKey;
   private Double score;
 
+  @Builder.Default
   private Map<String, Object> userInfo = new HashMap<>();
 
   public String getUserInfoString(String key) {

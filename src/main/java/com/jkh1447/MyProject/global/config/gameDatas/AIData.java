@@ -2,7 +2,6 @@ package com.jkh1447.MyProject.global.config.gameDatas;
 
 import com.jkh1447.MyProject.service.matching.strategy.AI.AIConstants;
 import java.util.List;
-import org.springframework.stereotype.Component;
 import com.jkh1447.MyProject.domain.gameInfo.GameInfo;
 import com.jkh1447.MyProject.dto.gameInfo.GameConditionDto;
 

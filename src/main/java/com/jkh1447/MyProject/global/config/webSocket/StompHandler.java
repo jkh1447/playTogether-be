@@ -3,7 +3,6 @@ package com.jkh1447.MyProject.global.config.webSocket;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.MessageDeliveryException;
-import org.springframework.messaging.simp.config.AbstractMessageBrokerConfiguration;
 import org.springframework.messaging.simp.stomp.StompCommand;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.ChannelInterceptor;
@@ -13,7 +12,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import com.jkh1447.MyProject.service.chating.ChatRoomService;
 import com.jkh1447.MyProject.domain.chating.ChatingConstants;
-import com.jkh1447.MyProject.domain.matching.MatchingConstants;
 import com.jkh1447.MyProject.service.chating.ChatMessageSenderService;
 
 @Slf4j

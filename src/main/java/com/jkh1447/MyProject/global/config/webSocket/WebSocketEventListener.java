@@ -1,16 +1,11 @@
 package com.jkh1447.MyProject.global.config.webSocket;
 
 import org.springframework.context.event.EventListener;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.socket.messaging.SessionDisconnectEvent;
-import com.jkh1447.MyProject.domain.matching.MatchingConstants;
-import com.jkh1447.MyProject.dto.chating.ChatMessageDto;
 import com.jkh1447.MyProject.service.chating.ChatRoomService;
 import com.jkh1447.MyProject.service.chating.ChatMessageSenderService;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.stereotype.Component;
-import com.jkh1447.MyProject.dto.chating.ParticipantsDto;
 import com.jkh1447.MyProject.service.matching.MatchQueueService;
 import com.jkh1447.MyProject.service.matching.MatchingService;
 

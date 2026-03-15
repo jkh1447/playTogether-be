@@ -2,13 +2,11 @@ package com.jkh1447.MyProject.service.matching;
 
 import org.springframework.stereotype.Service;
 import com.jkh1447.MyProject.domain.matching.MatchingConstants;
-import com.jkh1447.MyProject.domain.matching.aiMatching.GameAlias;
 import com.jkh1447.MyProject.dto.matching.MatchingRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import java.util.Map;
 import java.util.stream.Collectors;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -21,10 +19,8 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Collection;
-import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.data.redis.core.script.RedisScript;
 import com.jkh1447.MyProject.service.matching.aiMatching.AIMatchingService;
-import com.fasterxml.jackson.core.type.TypeReference;
 import org.springframework.data.redis.core.StringRedisTemplate;
 
 @Slf4j

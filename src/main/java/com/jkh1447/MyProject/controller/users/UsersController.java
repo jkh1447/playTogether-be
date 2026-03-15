@@ -2,7 +2,6 @@ package com.jkh1447.MyProject.controller.users;
 
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import lombok.RequiredArgsConstructor;
@@ -12,10 +11,7 @@ import com.jkh1447.MyProject.service.users.UsersService;
 import jakarta.servlet.http.HttpServletResponse;
 import com.jkh1447.MyProject.domain.auth.AuthConstants;
 import com.jkh1447.MyProject.domain.auth.Role;
-import com.jkh1447.MyProject.domain.users.Users;
-import com.jkh1447.MyProject.domain.users.exception.UserNotFoundException;
 import com.jkh1447.MyProject.dto.users.UserInfoResponse;
-import java.util.Map;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;

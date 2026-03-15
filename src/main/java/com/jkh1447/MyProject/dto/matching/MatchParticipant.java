@@ -3,7 +3,6 @@ package com.jkh1447.MyProject.dto.matching;
 import com.jkh1447.MyProject.domain.matching.exception.InvalidStringFormatException;
 import com.jkh1447.MyProject.domain.matching.exception.MatchingErrorCode;
 import lombok.Builder;
-import java.util.Map;
 
 @Builder
 public record MatchParticipant(String userId, Double score, String nickname) {

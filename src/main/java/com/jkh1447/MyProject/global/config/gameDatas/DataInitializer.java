@@ -5,9 +5,7 @@ import org.springframework.stereotype.Component;
 import lombok.extern.slf4j.Slf4j;
 import lombok.RequiredArgsConstructor;
 import com.jkh1447.MyProject.domain.gameInfo.GameInfo;
-import com.jkh1447.MyProject.dto.gameInfo.GameConditionDto;
 import com.jkh1447.MyProject.repository.gameInfo.gameInfoRepository;
-import com.jkh1447.MyProject.service.matching.strategy.LoL.LoLConstants;
 
 import java.util.List;
 

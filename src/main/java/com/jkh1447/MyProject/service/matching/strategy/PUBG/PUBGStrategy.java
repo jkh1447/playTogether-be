@@ -16,7 +16,6 @@ import com.jkh1447.MyProject.dto.matching.MatchingRequest;
 import com.jkh1447.MyProject.dto.matching.QueueInfo;
 import com.jkh1447.MyProject.dto.matching.QueueUser;
 import com.jkh1447.MyProject.service.matching.strategy.MatchStrategy;
-import com.jkh1447.MyProject.service.matching.strategy.PUBG.PUBGConstants;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 

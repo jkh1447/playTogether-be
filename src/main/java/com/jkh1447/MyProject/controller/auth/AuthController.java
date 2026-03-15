@@ -3,7 +3,6 @@ package com.jkh1447.MyProject.controller.auth;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -31,7 +30,7 @@ public class AuthController {
 
 	private final AuthService userService;
 	private final JWTConfig jwtConfig;
-	private final JwtUtil jwtUtil;
+	
 
 	// @PostMapping("/signup")
 	// public ResponseEntity<Map<String, String>> signup(@RequestBody UserSignupRequestDto request)

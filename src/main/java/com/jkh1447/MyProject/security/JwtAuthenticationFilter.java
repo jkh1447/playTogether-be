@@ -11,7 +11,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import java.io.IOException;
-import jakarta.servlet.http.Cookie;
 import org.springframework.security.core.context.SecurityContextHolder;
 import com.jkh1447.MyProject.domain.auth.AuthConstants;
 

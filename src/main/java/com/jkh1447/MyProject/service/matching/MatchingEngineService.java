@@ -1,20 +1,14 @@
 package com.jkh1447.MyProject.service.matching;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.ZSetOperations;
-import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Service;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jkh1447.MyProject.domain.matching.MatchingConstants;
-import com.jkh1447.MyProject.domain.matching.exception.MatchingErrorCode;
-import com.jkh1447.MyProject.domain.matching.exception.UserQueueInfoParsingException;
 import com.jkh1447.MyProject.dto.matching.MatchDeclineResponse;
 import com.jkh1447.MyProject.dto.matching.MatchParticipant;
 import com.jkh1447.MyProject.dto.matching.QueueInfo;

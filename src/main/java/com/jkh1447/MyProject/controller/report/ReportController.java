@@ -21,8 +21,6 @@ import com.jkh1447.MyProject.service.report.ReportService;
 import com.jkh1447.MyProject.global.response.ApiResponse;
 import java.beans.PropertyEditorSupport;
 import org.springframework.data.domain.Page;
-import com.jkh1447.MyProject.domain.feedback.FeedbackCategory;
-import com.jkh1447.MyProject.domain.feedback.FeedbackStatus;
 import com.jkh1447.MyProject.domain.report.Report;
 import com.jkh1447.MyProject.dto.gameInfo.UpdateReportStatusDto;
 
