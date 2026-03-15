@@ -4,12 +4,7 @@ spring:
     name: MyProject
 
   jpa:
-    hibernate:
-      ddl-auto: validate # update, create-drop
     show-sql: false
-    properties:
-      hibernate:
-        format_sql: true
 
 
 
