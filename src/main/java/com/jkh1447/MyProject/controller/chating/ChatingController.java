@@ -70,6 +70,10 @@ public class ChatingController {
         return e.getMessage();
     }
 
+    @MessageMapping("/chat/{roomId}/check")
+    public void checkRoomSubscription(@DestinationVariable String roomId, SimpMessageHeaderAccessor accessor) {
+        
+    }
 
 
 }

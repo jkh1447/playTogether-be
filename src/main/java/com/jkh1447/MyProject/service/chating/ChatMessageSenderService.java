@@ -1,5 +1,6 @@
 package com.jkh1447.MyProject.service.chating;
 
+import java.util.stream.Collectors;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import com.jkh1447.MyProject.domain.chating.ChatingConstants;
@@ -7,6 +8,8 @@ import com.jkh1447.MyProject.dto.chating.ChatMessageDto;
 import com.jkh1447.MyProject.dto.chating.ParticipantsDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import java.util.Map;
+import java.util.List;
 
 @Slf4j
 @Service
@@ -36,5 +39,9 @@ public class ChatMessageSenderService {
     public void sendChatMessage(String roomId, ChatMessageDto chatMessage) {
         messagingTemplate.convertAndSend(ChatingConstants.SUB_ROOM_PATH + roomId, chatMessage);
         log.info("채팅 메세지 전송: 방 {}, 메세지 {}", roomId, chatMessage);
+    }
+
+    public void sendParticipantsToUser(String userId, ParticipantsDto participants) {
+        messagingTemplate.convertAndSendToUser(userId, ChatingConstants.SUB_CHAT_SUB_CHECK_PATH, participants);
     }
 }

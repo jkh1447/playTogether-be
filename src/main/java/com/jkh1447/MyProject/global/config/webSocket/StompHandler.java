@@ -12,7 +12,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import com.jkh1447.MyProject.service.chating.ChatRoomService;
 import com.jkh1447.MyProject.domain.chating.ChatingConstants;
+import com.jkh1447.MyProject.dto.chating.ParticipantsDto;
 import com.jkh1447.MyProject.service.chating.ChatMessageSenderService;
+import com.jkh1447.MyProject.service.matching.RoomService;
+import java.util.Map;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -21,6 +24,7 @@ public class StompHandler implements ChannelInterceptor {
 
     private final ChatRoomService chatRoomService;
     private final ChatMessageSenderService chatMessageSenderService;
+    private final RoomService roomService;
 
     private final String CHAT_SUB_TYPE = "CHAT";
     private final String SUB_TYPE = "SUB_TYPE_";
@@ -72,12 +76,28 @@ public class StompHandler implements ChannelInterceptor {
 
             log.info("구독 정보 저장 완료: 방 {}, 구독 ID {}", roomId, subscriptionId);
 
-            if (accessor.getSessionAttributes() == null || accessor.getSessionAttributes().get("nickname") == null || accessor.getSessionAttributes().get("userId") == null) {
-                throw new MessageDeliveryException("세션 정보 저장에 예기치 못한 오류가 발생했습니다.");
+            if (accessor.getSessionAttributes() == null) {
+                throw new MessageDeliveryException("세션 정보를 불러오는 도중 오류가 발생했습니다.");
             }
+
+            if (accessor.getSessionAttributes().get("nickname") == null) {
+                throw new MessageDeliveryException("세션 정보의 닉네임을 불러오는 도중 오류가 발생했습니다.");
+            }
+
+            if (accessor.getSessionAttributes().get("userId") == null) {
+                throw new MessageDeliveryException("세션 정보의 유저아이디를 불러오는 도중 오류가 발생했습니다.");
+            }
+
             String nickname = accessor.getSessionAttributes().get("nickname").toString();
             String userId = accessor.getSessionAttributes().get("userId").toString();
-    
+
+            // 구독했을 때 참가자에 추가
+            // roomService.addParticipant(roomId, userId, nickname);
+            // chatMessageSenderService.sendParticipants(roomId);
+
+            ParticipantsDto participants = chatRoomService.getParticipants(roomId);
+            chatMessageSenderService.sendParticipantsToUser(userId, participants);
+            
             if (!chatRoomService.isUserInRoom(userId, roomId)) {
                 throw new MessageDeliveryException("권한이 없는 채팅방입니다.");
             }
@@ -119,7 +139,6 @@ public class StompHandler implements ChannelInterceptor {
                 // (이후 브라우저 종료 시 WebSocketEventListener에서 userId 사용)
                 // roomId 제거로 DISCONNECT 이벤트의 채팅방 처리 중복 방지
                 accessor.getSessionAttributes().remove("roomId");
-                accessor.getSessionAttributes().remove("nickname");
                 log.info("[채팅방 퇴장] userId: {}, roomId: {}", userId, roomId);
             }
         }

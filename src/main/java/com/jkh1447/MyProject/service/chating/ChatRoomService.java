@@ -37,4 +37,6 @@ public class ChatRoomService {
         String roomStatusKey = MatchingConstants.ROOM_STATUS_KEY + roomId;
         return redisTemplate.opsForHash().hasKey(roomStatusKey, userId);
     }
+
+
 }

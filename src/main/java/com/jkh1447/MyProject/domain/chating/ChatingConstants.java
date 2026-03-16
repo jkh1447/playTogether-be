@@ -13,4 +13,6 @@ public class ChatingConstants {
     
     public static final int MESSAGE_LENGTH_LIMIT = 1000;
 
+    public static final String SUB_CHAT_SUB_CHECK_PATH = "/queue/chat/sub-check";
+
 }

@@ -48,10 +48,16 @@ public class RoomService {
                 .roomId(roomId)
                 .participants(participantsList)
                 .build();
-
+        // 방정보는 참가자들을 저장하지만, 현재 채팅방 참가자는 구독시 추가
         roomRepository.save(room);
 
         redisTemplate.opsForHash().putAll(roomStatusKey, roomStatus);
+        redisTemplate.expire(roomStatusKey, Duration.ofSeconds(MatchingConstants.ROOM_EXPIRE_SECONDS));
+    }
+
+    public void addParticipant(String roomId, String userId, String nickname) {
+        String roomStatusKey = buildRoomStatusKey(roomId);
+        redisTemplate.opsForHash().putIfAbsent(roomStatusKey, userId, nickname);
         redisTemplate.expire(roomStatusKey, Duration.ofSeconds(MatchingConstants.ROOM_EXPIRE_SECONDS));
     }
 
@@ -72,4 +78,6 @@ public class RoomService {
             log.info("[방 삭제] roomId: {}", roomId);
         }
     }
+
+
 }
