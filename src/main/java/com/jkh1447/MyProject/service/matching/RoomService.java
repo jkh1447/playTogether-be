@@ -13,52 +13,68 @@ import java.util.Map;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.ArrayList;
+import com.jkh1447.MyProject.domain.chating.ChatingConstants;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class RoomService {
 
-    /* 
-     * Redis Hash 구조
-     * 1. Room Status // 방에 누가 있는가?
-     * Key: room:status:{roomId}
+    /*
+     * Redis Hash 구조 
+
+     * 1. Room Participants // 방에 누가 있는가? 
+     * Key: room:participants:{roomId} 
      * Value: {userId:nickname, userId:nickname, ...}
+     * 
+     * 2. Room Status // 방 상태
+     * Key: room:status:{roomId}
+     * Value: {userId:status, userId:status, ...}
      */
-    
+
     private final RedisTemplate<String, Object> redisTemplate;
     private final RoomRepository roomRepository;
 
     /*
-     * roomStatus 생성
-     * 참가자들에게 방 이동 알림
+     * roomStatus 생성 참가자들에게 방 이동 알림
      */
 
     public void createRoom(String roomId, List<MatchParticipant> participants) {
+        String roomParticipantsKey = buildRoomParticipantsKey(roomId);
         String roomStatusKey = buildRoomStatusKey(roomId);
 
-        Map<String, Object> roomStatus = new HashMap<>();
+        Map<String, Object> roomParticipants = new HashMap<>();
         List<String> participantsList = new ArrayList<>();
-        for(MatchParticipant participant: participants) {
-            roomStatus.put(participant.userId(), participant.nickname());
+
+        Map<String, Object> roomStatus = new HashMap<>();
+        roomStatus.put(ChatingConstants.CHAT_PARTICIPANTS_COUNT, participants.size());
+
+        for (MatchParticipant participant : participants) {
+            roomParticipants.put(participant.userId(), participant.nickname());
             participantsList.add(participant.userId());
+
+            roomStatus.put(participant.userId(), ChatingConstants.CHAT_STATUS_INVITED);
         }
 
-        Room room = Room.builder()
-                .roomId(roomId)
-                .participants(participantsList)
-                .build();
+        Room room = Room.builder().roomId(roomId).participants(participantsList).build();
         // 방정보는 참가자들을 저장하지만, 현재 채팅방 참가자는 구독시 추가
         roomRepository.save(room);
 
         redisTemplate.opsForHash().putAll(roomStatusKey, roomStatus);
-        redisTemplate.expire(roomStatusKey, Duration.ofSeconds(MatchingConstants.ROOM_EXPIRE_SECONDS));
+        // redisTemplate.opsForHash().putAll(roomStatusKey, roomParticipants);
+        // redisTemplate.expire(roomStatusKey,
+        //         Duration.ofSeconds(MatchingConstants.ROOM_EXPIRE_SECONDS));
     }
 
     public void addParticipant(String roomId, String userId, String nickname) {
-        String roomStatusKey = buildRoomStatusKey(roomId);
+        String roomStatusKey = buildRoomParticipantsKey(roomId);
         redisTemplate.opsForHash().putIfAbsent(roomStatusKey, userId, nickname);
-        redisTemplate.expire(roomStatusKey, Duration.ofSeconds(MatchingConstants.ROOM_EXPIRE_SECONDS));
+        redisTemplate.expire(roomStatusKey,
+                Duration.ofSeconds(MatchingConstants.ROOM_EXPIRE_SECONDS));
+    }
+
+    private String buildRoomParticipantsKey(String roomId) {
+        return MatchingConstants.ROOM_PARTICIPANTS_KEY + roomId;
     }
 
     private String buildRoomStatusKey(String roomId) {
@@ -66,12 +82,12 @@ public class RoomService {
     }
 
     public Map<Object, Object> getRoomStatus(String roomId) {
-        String roomStatusKey = buildRoomStatusKey(roomId);
+        String roomStatusKey = buildRoomParticipantsKey(roomId);
         return redisTemplate.opsForHash().entries(roomStatusKey);
     }
 
     public void deleteRoom(String roomId) {
-        String roomStatusKey = buildRoomStatusKey(roomId);
+        String roomStatusKey = buildRoomParticipantsKey(roomId);
         Boolean isDeleted = redisTemplate.delete(roomStatusKey);
 
         if (Boolean.TRUE.equals(isDeleted)) {

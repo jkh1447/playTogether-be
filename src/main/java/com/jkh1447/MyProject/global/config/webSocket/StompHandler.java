@@ -57,7 +57,12 @@ public class StompHandler implements ChannelInterceptor {
         // 구독 메세지인 경우
         else if (StompCommand.SUBSCRIBE.equals(accessor.getCommand()) && destination != null
                 && destination.startsWith(ChatingConstants.SUB_ROOM_PATH)) {
-            handleSubscribe(accessor);
+            try {
+                handleSubscribe(accessor);
+            } catch (MessageDeliveryException e) {
+                log.error("구독 실패: {}", e.getMessage());
+                return null;
+            }
         } else if (StompCommand.UNSUBSCRIBE.equals(accessor.getCommand())) {
             handleUnsubscribe(accessor);
         }
@@ -91,16 +96,16 @@ public class StompHandler implements ChannelInterceptor {
             String nickname = accessor.getSessionAttributes().get("nickname").toString();
             String userId = accessor.getSessionAttributes().get("userId").toString();
 
+            if (!chatRoomService.isUserCanJoin(userId, roomId)) {
+                throw new MessageDeliveryException("권한이 없는 채팅방입니다.");
+            }
             // 구독했을 때 참가자에 추가
-            // roomService.addParticipant(roomId, userId, nickname);
-            // chatMessageSenderService.sendParticipants(roomId);
+            roomService.addParticipant(roomId, userId, nickname);
+            chatMessageSenderService.sendParticipants(roomId);
 
             ParticipantsDto participants = chatRoomService.getParticipants(roomId);
             chatMessageSenderService.sendParticipantsToUser(userId, participants);
             
-            if (!chatRoomService.isUserInRoom(userId, roomId)) {
-                throw new MessageDeliveryException("권한이 없는 채팅방입니다.");
-            }
     
             if (accessor.getSessionAttributes() != null) {
                 accessor.getSessionAttributes().put("roomId", roomId);

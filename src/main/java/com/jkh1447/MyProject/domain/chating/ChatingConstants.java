@@ -15,4 +15,11 @@ public class ChatingConstants {
 
     public static final String SUB_CHAT_SUB_CHECK_PATH = "/queue/chat/sub-check";
 
+    
+    public static final String CHAT_STATUS_INVITED = "INVITED";
+    public static final String CHAT_STATUS_EXITED = "EXITED";
+    public static final String CHAT_STATUS_JOINED = "JOINED";
+
+    public static final String CHAT_PARTICIPANTS_COUNT = "count";
+
 }

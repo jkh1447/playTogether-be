@@ -21,7 +21,6 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     private final StompHandler stompHandler;
     private final ServerConfig serverConfig;
     private final HandshakeAuthInterceptor handshakeAuthInterceptor;
-
     public WebSocketConfig(@Lazy StompHandler stompHandler, ServerConfig serverConfig, HandshakeAuthInterceptor handshakeAuthInterceptor) {
         this.stompHandler = stompHandler;
         this.serverConfig = serverConfig;
@@ -54,5 +53,6 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     public void configureClientInboundChannel(ChannelRegistration registration) {
         registration.interceptors(stompHandler);
     }
+
 
 }

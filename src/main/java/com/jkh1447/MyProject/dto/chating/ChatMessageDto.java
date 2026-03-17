@@ -6,6 +6,7 @@ import lombok.Builder;
 
 @Builder
 public record ChatMessageDto(
+    Long id,
     MessageType type,
     String roomId,
     String senderId,
@@ -19,8 +20,9 @@ public record ChatMessageDto(
         LEAVE
     }
 
-    public static ChatMessageDto createEnterMessage(String roomId, String senderId, String senderNickname) {
+    public static ChatMessageDto createEnterMessage(Long id, String roomId, String senderId, String senderNickname) {
         return ChatMessageDto.builder()
+                .id(id)
                 .type(MessageType.ENTER)
                 .roomId(roomId)
                 .senderId(senderId)
@@ -30,8 +32,9 @@ public record ChatMessageDto(
                 .build();
     }
 
-    public static ChatMessageDto createLeaveMessage(String roomId, String senderId, String senderNickname) {
+    public static ChatMessageDto createLeaveMessage(Long id, String roomId, String senderId, String senderNickname) {
         return ChatMessageDto.builder()
+                .id(id)
                 .type(MessageType.LEAVE)
                 .roomId(roomId)
                 .senderId(senderId)
@@ -41,8 +44,9 @@ public record ChatMessageDto(
                 .build();
     }
 
-    public static ChatMessageDto createTalkMessage(String roomId, String senderId, String senderNickname, String content) {
+    public static ChatMessageDto createTalkMessage(Long id, String roomId, String senderId, String senderNickname, String content) {
         return ChatMessageDto.builder()
+                .id(id)
                 .type(MessageType.TALK)
                 .roomId(roomId)
                 .senderId(senderId)
@@ -51,4 +55,5 @@ public record ChatMessageDto(
                 .timestamp(LocalDateTime.now().toString())
                 .build();
     }
+
 }

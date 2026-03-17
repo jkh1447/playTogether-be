@@ -13,8 +13,9 @@ public class MatchingConstants {
     public static final String AI_MATCHING = "AI_MATCHING";
     public static final String AI_USER_INPUT = "userInput";
     public static final String USER_CREATED_GAME_USER_INPUT = "userInput";
-    
+
     public static final String MATCH_STATUS_KEY = "match:status:";
+    public static final String ROOM_PARTICIPANTS_KEY = "room:participants:";
     public static final String ROOM_STATUS_KEY = "room:status:";
     public static final String ACTIVE_QUEUES_KEY = "active:queues";
     public static final String ACTIVE_ANY_QUEUE_KEY = "active:any:queues";
@@ -25,7 +26,7 @@ public class MatchingConstants {
     public static final String MATCH_QUEUE_KEY = "queueKey";
     public static final String ANY_GROUP_SIZE = "any";
     public static final String MATCH_USER_QUEUE_INFO = "userQueueInfo";
-    
+
     public static final String SUB_MATCH_FOUND_PATH = "/queue/match-found";
     public static final String SUB_MOVE_ROOM_PATH = "/queue/move-room";
     public static final String SUB_MATCH_DECLINE_PATH = "/queue/match-decline";

@@ -42,7 +42,7 @@ public class ChatMessage {
   @Column(columnDefinition = "TEXT", nullable = false)
   private String content;
 
-  @Column(length = 45)
+  @Column(length = 45, nullable = true)
   private String clientIp;
 
   @Column(length = 512, updatable = false, nullable = true)

@@ -14,6 +14,7 @@ import com.jkh1447.MyProject.service.chating.ChatMessageSenderService;
 import org.springframework.messaging.simp.annotation.SendToUser;
 import org.springframework.messaging.handler.annotation.MessageExceptionHandler;
 import com.jkh1447.MyProject.domain.chating.ChatingConstants;
+import com.jkh1447.MyProject.service.chating.ChatRoomService;
 
 @Slf4j
 @Controller
@@ -22,6 +23,7 @@ public class ChatingController {
     
     private final ChatingService chatingService;
     private final ChatMessageSenderService chatMessageSenderService;
+    private final ChatRoomService chatRoomService;
     
     // app/chat/{roomId}로 메세지가 오면 실행됨.
     @MessageMapping("/chat/{roomId}")
@@ -42,6 +44,10 @@ public class ChatingController {
         String senderId = sessionUserId.toString();
         String senderNickname = sessionNickname.toString();
 
+        if (!chatRoomService.isUserCanJoin(senderId, roomId)) {
+            throw new MessageDeliveryException(ChatingConstants.INVALID_SESSION_INFO);
+        }
+
         if (chatMessage.content().length() > 1000) {
             throw new MessageDeliveryException(ChatingConstants.MESSAGE_TOO_LONG);
         }
@@ -57,9 +63,9 @@ public class ChatingController {
             throw new MessageDeliveryException(ChatingConstants.SESSION_EXPIRED);
         }
 
-        chatingService.saveChatMessage(chatMessage, sessionClientIp.toString(), sessionUserAgent.toString());
+        Long messageId = chatingService.saveChatMessage(chatMessage, sessionClientIp.toString(), sessionUserAgent.toString());
 
-        ChatMessageDto message = chatingService.createChatMessageDto(roomId, chatMessage);
+        ChatMessageDto message = chatingService.createChatMessageDto(messageId, roomId, chatMessage);
 
         chatMessageSenderService.sendChatMessage(roomId, message);
     }
