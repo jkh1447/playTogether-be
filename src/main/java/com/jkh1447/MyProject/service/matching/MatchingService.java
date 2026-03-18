@@ -47,6 +47,8 @@ public class MatchingService {
         String queueKey = strategy.generateQueueKey(request);
         String queueUserInfos = strategy.getQueueUserInfos(request);
         queueService.addToQueue(userId, queueKey, queueUserInfos);
+
+        queueService.upsertQueueLog(queueKey);
         
     }
 

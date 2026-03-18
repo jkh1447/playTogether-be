@@ -58,6 +58,7 @@ jwt:
   cookieSameSite: Lax
 
 server:
+  forward-headers-strategy: native
   api:
     url: ${FRONTEND_URL}
 

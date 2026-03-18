@@ -1,6 +1,7 @@
 package com.jkh1447.MyProject.service.matching;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import com.jkh1447.MyProject.domain.matching.MatchingConstants;
 import com.jkh1447.MyProject.dto.matching.MatchingRequest;
 import lombok.RequiredArgsConstructor;
@@ -11,7 +12,6 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jkh1447.MyProject.dto.matching.QueueUser;
-import com.jkh1447.MyProject.repository.matching.GameAliasRepository;
 import java.util.List;
 import java.util.Set;
 import java.util.ArrayList;
@@ -20,8 +20,9 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Collection;
 import org.springframework.data.redis.core.script.RedisScript;
-import com.jkh1447.MyProject.service.matching.aiMatching.AIMatchingService;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import com.jkh1447.MyProject.repository.matching.QueueLogRepository;
 
 @Slf4j
 @Service
@@ -59,8 +60,7 @@ public class MatchQueueService {
     private final RedisScript<Long> removeUsersFromQueueInfosScript;
     private final RedisScript<Long> cleanQueueScript;
     private final RedisScript<Long> addUserToQueueScript;
-    private final GameAliasRepository gameAliasRepository;
-    private final AIMatchingService geminiService;
+    private final QueueLogRepository queueLogRepository;
     
     public void addToQueue(String userId, String queueKey, String queueUserInfos) {
         double score = System.currentTimeMillis();
@@ -231,5 +231,9 @@ public class MatchQueueService {
         return redisTemplate.opsForHash().hasKey(MatchingConstants.USER_QUEUE_STATUS_KEY, userId);
     }
 
-    
+    @Transactional
+    @Async("queueLogTaskExecutor")
+    public void upsertQueueLog(String queueKey) {
+        queueLogRepository.upsertQueueKey(queueKey);
+    }
 }
