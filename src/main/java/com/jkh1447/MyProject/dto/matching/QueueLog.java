@@ -20,6 +20,7 @@ public class QueueLog {
   @Column(length=100)
   private String queueKey;
 
+  @Builder.Default
   @Column(nullable = false)
   private Long count = 1L;
 
