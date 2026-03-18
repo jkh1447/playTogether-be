@@ -58,12 +58,13 @@ public class SecurityConfig {
                         .requestMatchers("/api/report", "/api/chatMessageLog", "/api/report/update/status").hasRole("ADMIN")
                         .requestMatchers("/api/feedback", "/api/feedback/update/status").hasRole("ADMIN")
                         .requestMatchers("/api/auth/signup", "/api/auth/login", "/api/auth/guest", "/api/auth/logout", "/api/auth/refresh", "/api/users/me").permitAll() // 회원가입, 로그인
-                        .requestMatchers("/oauth2/**", "/login/oauth2/**", "/api/gameInfo/**").permitAll()
+                        .requestMatchers("/oauth2/**", "/login/oauth2/**", "/api/gameInfo/**", "/api/feedback/category/**").permitAll()
                         .anyRequest().authenticated() // 나머지는 토큰이 있어야 함
                 )
                 .oauth2Login(oauth -> oauth
                         .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService))
                         .successHandler(oAuth2SuccessHandler)
+                        
                 )
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))

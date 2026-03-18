@@ -66,7 +66,7 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         response.addHeader(HttpHeaders.SET_COOKIE, accessTokenCookie.toString());
         response.addHeader(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString());
 
-        getRedirectStrategy().sendRedirect(request, response, serverConfig.getUrl());
+        getRedirectStrategy().sendRedirect(request, response, serverConfig.getUrl() + "/oauth/callback");
     }
 
     private String extractEmail(OAuth2User oAuth2User, String registrationId) {
