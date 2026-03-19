@@ -1,5 +1,6 @@
 package com.jkh1447.MyProject.global.config.gameDatas;
 
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -9,6 +10,7 @@ import com.jkh1447.MyProject.dto.gameInfo.GameConditionDto;
 import com.jkh1447.MyProject.service.matching.strategy.PUBG.PUBGConstants;
 
 @Component
+@Order(3)
 public class PUBGData implements GameDataComponent {
 
   @Override
@@ -35,7 +37,7 @@ public class PUBGData implements GameDataComponent {
             .dependsOnValues(List.of("랭크", "일반전")).build());
 
 
-    return GameInfo.builder().id(PUBGConstants.GAME_ID).name("PUBG").description("배틀로얄 슈팅 게임")
+    return GameInfo.builder().id(PUBGConstants.GAME_ID).sortOrder(3).name("PUBG").description("배틀로얄 슈팅 게임")
         .playerCount("4명").conditions(pubgConditions).build();
   }
 }

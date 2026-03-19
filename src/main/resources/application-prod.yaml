@@ -65,5 +65,5 @@ server:
 logging:
   level:
     root: INFO
-    org.springframework.messaging: INFO
-    org.springframework.web.socket: INFO
+    org.springframework.messaging: WARN
+    org.springframework.web.socket: WARN

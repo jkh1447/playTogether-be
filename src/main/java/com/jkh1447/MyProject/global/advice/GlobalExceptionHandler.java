@@ -55,7 +55,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(TokenExpiredException.class)
     public ResponseEntity<ApiResponse<?>> handleTokenExpiredException(TokenExpiredException e) {
 
-        log.error("리프래시 토큰 만료: {}", e.getMessage(), e);
+        log.error("리프래시 토큰 만료: {}", e.getMessage());
         //프론트에서 로그인 페이지로 리다이렉트, 세션종료 알림
         return ResponseEntity.status(e.getHttpStatus()).body(ApiResponse.fail(AuthErrorCode.REFRESH_TOKEN_EXPIRED.name(), e.getMessage()));
     }
@@ -63,7 +63,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(RefreshTokenNotFoundFromCooKie.class)
     public ResponseEntity<ApiResponse<?>> handleRefreshTokenNotFoundFromCooKie(RefreshTokenNotFoundFromCooKie e) {
 
-        log.error("리프래시 토큰 없음: {}", e.getMessage(), e);
+        log.error("리프래시 토큰 없음: {}", e.getMessage());
         //프론트에서 로그인 페이지로 리다이렉트, 세션종료 알림
         return ResponseEntity.status(e.getHttpStatus()).body(ApiResponse.fail(AuthErrorCode.REFRESH_TOKEN_NOT_FOUND_FROM_COOKIE.name(), e.getMessage()));
     }

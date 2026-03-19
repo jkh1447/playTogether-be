@@ -29,6 +29,9 @@ public class GameInfo {
   private String id;
 
   @Column(nullable = false)
+  private Integer sortOrder; 
+
+  @Column(nullable = false)
   private String name;
 
   @Column(nullable = false)

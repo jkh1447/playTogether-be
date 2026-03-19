@@ -54,6 +54,7 @@ public class WebSocketEventListener {
             headerAccessor.getSessionAttributes().remove("userId");
             headerAccessor.getSessionAttributes().remove("roomId");
             headerAccessor.getSessionAttributes().remove("nickname");
+            headerAccessor.getSessionAttributes().remove("canChat");
         }
 
     }

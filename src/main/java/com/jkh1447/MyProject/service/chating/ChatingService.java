@@ -1,6 +1,7 @@
 package com.jkh1447.MyProject.service.chating;
 
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.util.HtmlUtils;
 import com.jkh1447.MyProject.domain.matching.MatchingConstants;
@@ -67,6 +68,7 @@ public class ChatingService {
     // log.info("방이 비어 있어 삭제 처리되었습니다: {}", roomKey);
     // }
     // }
+
 
     public Long saveChatMessage(ChatMessageDto message, String clientIp, String userAgent) {
         ChatMessage chatMessage = ChatMessage.builder().roomId(message.roomId())

@@ -16,7 +16,7 @@ public class GameInfoService {
   private final gameInfoRepository gameInfoRepository;
   
   public List<GameInfoDto> getAllGameInfoWithoutConditions() {
-    List<GameInfo> allGameInfos = gameInfoRepository.findAll();
+    List<GameInfo> allGameInfos = gameInfoRepository.findAllByOrderBySortOrderAsc();
     GameInfo AI_GAME = allGameInfos.stream().filter(gameInfo -> gameInfo.getId().equals(AIConstants.GAME_ID)).findFirst().orElse(null);
     if (AI_GAME != null) {
       allGameInfos.remove(AI_GAME);

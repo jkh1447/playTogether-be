@@ -44,7 +44,7 @@ public class ChatingController {
         String senderId = sessionUserId.toString();
         String senderNickname = sessionNickname.toString();
 
-        if (!chatRoomService.isUserCanJoin(senderId, roomId)) {
+        if (accessor.getSessionAttributes().get("canChat") == null) {
             throw new MessageDeliveryException(ChatingConstants.INVALID_SESSION_INFO);
         }
 
@@ -64,9 +64,9 @@ public class ChatingController {
         }
 
         Long messageId = chatingService.saveChatMessage(chatMessage, sessionClientIp.toString(), sessionUserAgent.toString());
-
+        
         ChatMessageDto message = chatingService.createChatMessageDto(messageId, roomId, chatMessage);
-
+        
         chatMessageSenderService.sendChatMessage(roomId, message);
     }
 

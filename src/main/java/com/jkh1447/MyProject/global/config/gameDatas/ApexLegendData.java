@@ -1,12 +1,14 @@
 package com.jkh1447.MyProject.global.config.gameDatas;
 
 import java.util.List;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import com.jkh1447.MyProject.domain.gameInfo.GameInfo;
 import com.jkh1447.MyProject.dto.gameInfo.GameConditionDto;
 import com.jkh1447.MyProject.service.matching.strategy.ApexLegend.ApexLegendConstants;
 
 @Component
+@Order(5)
 public class ApexLegendData implements GameDataComponent {
   @Override
   public String getGameName() {
@@ -29,7 +31,7 @@ public class ApexLegendData implements GameDataComponent {
         .defaultValue("브론즈~프레데터").dependsOn("mode").dependsOnValues(List.of("랭크")).build()
     );
 
-    return GameInfo.builder().id(ApexLegendConstants.GAME_ID).name("ApexLegend")
+    return GameInfo.builder().id(ApexLegendConstants.GAME_ID).sortOrder(5).name("ApexLegend")
         .description("1인칭 배틀로얄 슈팅 게임").playerCount("3명").conditions(apexLegendConditions).build();
   }
 }

@@ -2,11 +2,13 @@ package com.jkh1447.MyProject.global.config.gameDatas;
 
 import com.jkh1447.MyProject.domain.gameInfo.GameInfo;
 import com.jkh1447.MyProject.dto.gameInfo.GameConditionDto;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 
 @Component
+@Order(6)
 public class UserCreatedGameData implements GameDataComponent {
 
   @Override
@@ -35,6 +37,7 @@ public class UserCreatedGameData implements GameDataComponent {
     );
     return GameInfo.builder()
         .id("userCreated")
+        .sortOrder(6)
         .name("직접 입력")
         .playerCount("2~10")
         .description("목록에 없는 게임을 직접 입력하여 참가하세요!")

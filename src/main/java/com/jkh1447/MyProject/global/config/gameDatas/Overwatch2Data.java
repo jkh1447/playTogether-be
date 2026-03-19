@@ -1,7 +1,7 @@
 package com.jkh1447.MyProject.global.config.gameDatas;
 
 import java.util.List;
-
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import com.jkh1447.MyProject.domain.gameInfo.GameInfo;
@@ -9,6 +9,7 @@ import com.jkh1447.MyProject.dto.gameInfo.GameConditionDto;
 import com.jkh1447.MyProject.service.matching.strategy.Overwatch2.Overwatch2Constants;
 
 @Component
+@Order(4)
 public class Overwatch2Data implements GameDataComponent {
 
   @Override
@@ -35,7 +36,7 @@ public class Overwatch2Data implements GameDataComponent {
         dependsOn("mode").dependsOnValues(List.of("경쟁전")).build()
     );
 
-    return GameInfo.builder().id(Overwatch2Constants.GAME_ID).name("Overwatch2")
+    return GameInfo.builder().id(Overwatch2Constants.GAME_ID).sortOrder(4).name("Overwatch2")
         .description("5v5 캐릭터 기반 전술 슈팅 게임").playerCount("5명")
         .conditions(overwatch2Conditions)
         .build();

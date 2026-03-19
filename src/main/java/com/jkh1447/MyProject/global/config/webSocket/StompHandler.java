@@ -110,6 +110,7 @@ public class StompHandler implements ChannelInterceptor {
             if (accessor.getSessionAttributes() != null) {
                 accessor.getSessionAttributes().put("roomId", roomId);
                 accessor.getSessionAttributes().put("nickname", nickname);
+                accessor.getSessionAttributes().put("canChat", true);
                 log.info("세션 정보 저장 완료: 방 {}", roomId);
             }
         } 
@@ -144,6 +145,7 @@ public class StompHandler implements ChannelInterceptor {
                 // (이후 브라우저 종료 시 WebSocketEventListener에서 userId 사용)
                 // roomId 제거로 DISCONNECT 이벤트의 채팅방 처리 중복 방지
                 accessor.getSessionAttributes().remove("roomId");
+                accessor.getSessionAttributes().remove("canChat");
                 log.info("[채팅방 퇴장] userId: {}, roomId: {}", userId, roomId);
             }
         }

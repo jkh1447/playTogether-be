@@ -1,5 +1,6 @@
 package com.jkh1447.MyProject.global.config.gameDatas;
 
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import com.jkh1447.MyProject.domain.gameInfo.GameInfo;
@@ -9,6 +10,7 @@ import com.jkh1447.MyProject.service.matching.strategy.Valorant.ValorantConstant
 import java.util.List;
 
 @Component
+@Order(2)
 public class ValorantData implements GameDataComponent {
 
   @Override
@@ -35,7 +37,7 @@ public class ValorantData implements GameDataComponent {
         //     .dependsOn("mode").dependsOnValues(List.of("경쟁전", "일반전")).build());
 
 
-    return GameInfo.builder().id(ValorantConstants.GAME_ID).name("Valorant")
+    return GameInfo.builder().id(ValorantConstants.GAME_ID).sortOrder(2).name("Valorant")
         .description("5v5 캐릭터 기반 전술 슈팅 게임").playerCount("5명").conditions(valorantConditions)
         .build();
   }

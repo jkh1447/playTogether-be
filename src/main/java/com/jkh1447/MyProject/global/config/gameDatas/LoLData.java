@@ -1,5 +1,6 @@
 package com.jkh1447.MyProject.global.config.gameDatas;
 
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import com.jkh1447.MyProject.domain.gameInfo.GameInfo;
@@ -9,6 +10,7 @@ import com.jkh1447.MyProject.service.matching.strategy.LoL.LoLConstants;
 import java.util.List;
 
 @Component
+@Order(1)
 public class LoLData implements GameDataComponent {
 
   @Override
@@ -33,7 +35,7 @@ public class LoLData implements GameDataComponent {
             .options(List.of( "상관없음", "탑", "정글", "미드", "원딜", "서포터")).defaultValue("상관없음")
             .dependsOn("mode").dependsOnValues(List.of("랭크", "자유랭크", "일반게임")).build());
 
-    return GameInfo.builder().id(LoLConstants.GAME_ID).name("League of Legends")
+    return GameInfo.builder().id(LoLConstants.GAME_ID).sortOrder(1).name("League of Legends")
         .description("5v5 팀 기반 전략 게임").playerCount("5명")
         .conditions(lolConditions)
         .build();
