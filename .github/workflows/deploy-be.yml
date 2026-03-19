@@ -35,6 +35,6 @@ jobs:
           key: ${{ secrets.EC2_KEY }}
           script: |
             cd ~/dagachi-server
-            docker-compose pull backend
-            docker-compose up -d backend
+            docker compose pull backend
+            docker compose up -d backend
             docker image prune -f
