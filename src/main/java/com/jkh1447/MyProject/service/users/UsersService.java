@@ -2,6 +2,7 @@ package com.jkh1447.MyProject.service.users;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import com.jkh1447.MyProject.repository.user.UserRepository;
 import com.jkh1447.MyProject.dto.users.UserInfoResponse;
@@ -25,6 +26,7 @@ public class UsersService {
         return user.getNickname();
     }
 
+    @Transactional
     public void withdraw(Authentication authentication) {
         if (authentication == null) {
             throw new UserNotFoundException();
