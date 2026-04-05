@@ -1,7 +1,8 @@
 ## 📌 목차
 
-1. [프로젝트 개요](#프로젝트-개요)  
-2. [서비스 소개](#서비스-소개)
+1. [프로젝트 개요](#프로젝트-개요)
+2. [프로젝트 아키텍처](#프로젝트-아키텍처)  
+3. [서비스 소개](#서비스-소개)
 
 ---
 
@@ -24,6 +25,12 @@
 |Frontend|[![React](https://img.shields.io/badge/React-%2320232a.svg?logo=react&logoColor=%2361DAFB)](#) [![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=fff)](#)|
 |Backend| [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-6DB33F?logo=springboot&logoColor=fff)](#) [![Spring Security](https://img.shields.io/badge/Spring%20Security-6DB33F?logo=springsecurity&logoColor=fff)](#) [![Postgres](https://img.shields.io/badge/Postgres-%23316192.svg?logo=postgresql&logoColor=white)](#) ![Redis](https://img.shields.io/badge/Redis-%23DD0031.svg?logo=redis&logoColor=white)|
 |Other|	[![Notion](https://img.shields.io/badge/Notion-000?logo=notion&logoColor=fff)](#)|
+
+---
+
+## 🏗 프로젝트 아키텍처
+
+<img width="1108" height="595" alt="스크린샷 2026-04-05 184659" src="https://github.com/user-attachments/assets/56009441-cc48-4971-ae23-2fe7716c92a8" />
 
 ---
 
