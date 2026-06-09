@@ -67,3 +67,15 @@ logging:
     root: INFO
     org.springframework.messaging: WARN
     org.springframework.web.socket: WARN
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: prometheus
+  endpoint:
+    prometheus:
+      enabled: true
+  metrics:
+    tags:
+      application: play-together

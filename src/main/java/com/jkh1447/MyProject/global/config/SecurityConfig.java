@@ -55,6 +55,7 @@ public class SecurityConfig {
                             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized");
                         }))
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/actuator/**").permitAll()
                         .requestMatchers("/api/report", "/api/chatMessageLog", "/api/report/update/status").hasRole("ADMIN")
                         .requestMatchers("/api/feedback", "/api/feedback/update/status").hasRole("ADMIN")
                         .requestMatchers("/api/auth/signup", "/api/auth/login", "/api/auth/guest", "/api/auth/logout", "/api/auth/refresh", "/api/users/me").permitAll() // 회원가입, 로그인
