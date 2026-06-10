@@ -48,13 +48,9 @@ export const options = {
       executor: "ramping-vus",
       startVUs: 0,
       stages: [
-        { duration: "30s", target: 100  },
-        { duration: "30s", target: 300  },
-        { duration: "30s", target: 500  },
-        { duration: "30s", target: 700  },
-        { duration: "30s", target: 1000 },
-        { duration: "3m",  target: 1000 }, // 유지
-        { duration: "30s", target: 0    },
+        { duration: "1m", target: 100 }, // 1분 동안 100명까지 증가
+    { duration: "1m", target: 100 }, // 3분 유지
+    { duration: "30s", target: 0 },
       ],
     },
   },

@@ -24,9 +24,6 @@ spring:
       hibernate:
         format_sql: false
     open-in-view: false
-  threads:
-    virtual:
-      enabled: false
 
   security:
     oauth2:
