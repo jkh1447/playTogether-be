@@ -24,6 +24,9 @@ spring:
       hibernate:
         format_sql: false
     open-in-view: false
+  threads:
+    virtual:
+      enabled: false
 
   security:
     oauth2:
@@ -66,7 +69,7 @@ server:
       max: 400
       min-spare: 50
     accept-count: 200
-    
+
 logging:
   level:
     root: INFO
