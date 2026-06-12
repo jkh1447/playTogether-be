@@ -63,7 +63,7 @@ server:
     url: ${FRONTEND_URL}
   tomcat:
     threads:
-      max: 400
+      max: 200
       min-spare: 50
     accept-count: 200
 
@@ -78,16 +78,15 @@ management:
   endpoints:
     web:
       exposure:
-        # 1. 콤마(,) 뒤에 한 칸 띄우고 수집할 엔드포인트를 지정합니다.
         include: "prometheus,metrics" 
   endpoint:
     prometheus:
       enabled: true
     metrics:
-      enabled: true # 2. 전체 메트릭 수집 활성화
+      enabled: true
   metrics:
     tags:
       application: play-together
     enable:
-      # 3. 'enabled'가 아니라 'enable' 하위에 명시해야 올바르게 먹힙니다.
+      all: true
       tomcat: true
