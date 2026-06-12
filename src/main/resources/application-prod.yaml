@@ -62,6 +62,8 @@ server:
   api:
     url: ${FRONTEND_URL}
   tomcat:
+    mbeanregistry:
+      enabled: true
     threads:
       max: 200
       min-spare: 50
