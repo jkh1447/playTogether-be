@@ -44,7 +44,8 @@ public class MatchingEngineService {
                 redisTemplate.opsForSet().members(MatchingConstants.ACTIVE_ANY_QUEUE_KEY);
 
         // 인원 조건 매칭 먼저 -> 인원 조건이 없는 매칭
-        if ((activeQueues == null || activeQueues.isEmpty()) && (activeAnyQueues == null || activeAnyQueues.isEmpty())) {
+        if ((activeQueues == null || activeQueues.isEmpty())
+                && (activeAnyQueues == null || activeAnyQueues.isEmpty())) {
             return;
         }
 
@@ -99,7 +100,7 @@ public class MatchingEngineService {
                     lock.unlock();
                 }
             } catch (IllegalMonitorStateException e) {
-                // 락이 이미 만료된 상황. 
+                // 락이 이미 만료된 상황.
                 log.error("매칭 엔진 로직이 제한 시간(10초)을 초과했습니다");
             }
         }
@@ -108,43 +109,24 @@ public class MatchingEngineService {
 
     private void processAnyQueue(String queueKey) { // 매칭
 
-        RLock lock = redissonClient.getLock("lock:" + queueKey);
 
-        try {
-            boolean isLocked = lock.tryLock(0, 10, TimeUnit.SECONDS);
-            if (!isLocked) {
+        QueueInfo queueInfo = QueueInfo.fromQueueKey(queueKey);
+        MatchStrategy strategy = strategyFactory.getStrategy(queueInfo.getGameName());
+
+        List<QueueUser> totalPool =
+                queueService.loadFromQueue(queueKey, MatchingConstants.ONLY_ANY_LIMIT);
+
+        List<QueueUser> pivots = totalPool.stream().limit(MatchingConstants.PIVOT_LIMIT).toList();
+
+        for (QueueUser pivot : pivots) {
+            List<QueueUser> finalTeam = strategy.buildAnyTeam(pivot, totalPool, queueInfo);
+            if (finalTeam.size() >= MatchingConstants.ONLY_ANY_QUEUE_MIN_TEAM_SIZE) {
+                queueInfo.setGroupSize(String.valueOf(finalTeam.size()));
+                attemptMatch(queueKey, queueInfo, finalTeam);
                 return;
             }
-
-            QueueInfo queueInfo = QueueInfo.fromQueueKey(queueKey);
-            MatchStrategy strategy = strategyFactory.getStrategy(queueInfo.getGameName());
-
-            List<QueueUser> totalPool =
-                    queueService.loadFromQueue(queueKey, MatchingConstants.ONLY_ANY_LIMIT);
-
-            List<QueueUser> pivots =
-                    totalPool.stream().limit(MatchingConstants.PIVOT_LIMIT).toList();
-
-            for (QueueUser pivot : pivots) {
-                List<QueueUser> finalTeam = strategy.buildAnyTeam(pivot, totalPool, queueInfo);
-                if (finalTeam.size() >= MatchingConstants.ONLY_ANY_QUEUE_MIN_TEAM_SIZE) {
-                    queueInfo.setGroupSize(String.valueOf(finalTeam.size()));
-                    attemptMatch(queueKey, queueInfo, finalTeam);
-                    return;
-                }
-            }
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        } finally {
-            try {
-                if (lock.isHeldByCurrentThread()) {
-                    lock.unlock();
-                }
-            } catch (IllegalMonitorStateException e) {
-                // 락이 이미 만료된 상황. 
-                log.error("매칭 엔진 로직이 제한 시간(10초)을 초과했습니다");
-            }
         }
+
 
     }
 
@@ -158,7 +140,7 @@ public class MatchingEngineService {
         String matchId = createMatch(queueKey, queueInfo, team);
 
         // 큐에 남은 사람이 없다면 해당 큐를 제거, 만약에 매칭이 취소된다면 큐가 없다면 다시 만드는 로직이 필요
-        // 
+        //
         queueService.cleanQueueIfEmpty(queueKey);
 
         matchTimeoutExecutor.schedule(() -> {
@@ -177,7 +159,7 @@ public class MatchingEngineService {
         List<Object> result = matchStatusService.getMatchStatusAtomically(matchId);
         log.info("[타임아웃 로직 시작] result: {}", result);
 
-        if(result == null) {
+        if (result == null) {
             // 찰나의 순간에 수락과 타임아웃이 경합된 경우 타임아웃처리 하지 않음.
             return;
         }
@@ -204,7 +186,8 @@ public class MatchingEngineService {
 
         log.info("========================================");
         log.info("🎯 [매칭 타임아웃] 게임: {}", matchStatusInfo.queueKey());
-        log.info("👥 팀원: {}", matchStatusInfo.participants().stream().map(MatchParticipant::nickname).toList());
+        log.info("👥 팀원: {}",
+                matchStatusInfo.participants().stream().map(MatchParticipant::nickname).toList());
         log.info("🆔 matchId: {}", matchId);
         log.info("========================================");
 
@@ -219,9 +202,10 @@ public class MatchingEngineService {
 
         String matchId = UUID.randomUUID().toString();
 
-        MatchStatusInfo matchStatusInfo = MatchStatusInfo.builder().groupSize(queueInfo.getGroupSize())
-                .acceptCount(0).participants(participants).queueKey(queueKey).build();
-                
+        MatchStatusInfo matchStatusInfo =
+                MatchStatusInfo.builder().groupSize(queueInfo.getGroupSize()).acceptCount(0)
+                        .participants(participants).queueKey(queueKey).build();
+
         matchStatusService.createMatchStatus(matchId, matchStatusInfo,
                 MatchingConstants.MATCH_STATUS_EXPIRE_SECONDS);
 

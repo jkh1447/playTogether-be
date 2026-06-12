@@ -48,8 +48,8 @@ export const options = {
       executor: "ramping-vus",
       startVUs: 0,
       stages: [
-        { duration: "1m", target: 25 }, // 1분 동안 100명까지 증가
-    { duration: "1m", target: 50 }, // 3분 유지
+        { duration: "5m", target: 1000 }, // 1분 동안 100명까지 증가
+    { duration: "2m", target: 1000 }, // 3분 유지
     { duration: "30s", target: 0 },
       ],
     },
@@ -79,9 +79,11 @@ export const options = {
 // ════════════════════════════════════════════════════════════════
 //  상수
 // ════════════════════════════════════════════════════════════════
-const BASE_URL = "https://da-gachi.com";
-const WS_URL   = "wss://da-gachi.com/ws-matching";
+// const BASE_URL = "https://da-gachi.com";
+// const WS_URL   = "wss://da-gachi.com/ws-matching";
 
+const BASE_URL = "http://localhost:8080";
+const WS_URL   = "ws://localhost:8080/ws-matching";
 // VU → 3개 큐 균등 분산 (큐 키: queue:LoL:groupSize=5:{mode})
 const QUEUE_PROFILES = [
   { mode: "랭크",     groupSize: "5", myRank: "실버", rankRange: "아이언~챌린저", position: "상관없음" },
