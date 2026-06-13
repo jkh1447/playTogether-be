@@ -40,7 +40,11 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(request -> {
                     var config = new org.springframework.web.cors.CorsConfiguration();
                     config.setAllowCredentials(true);
-                    config.setAllowedOrigins(java.util.List.of(serverConfig.getUrl()));
+                    config.setAllowedOrigins(java.util.List.of(
+                            serverConfig.getUrl(),
+                            "http://pt-alb-573380929.ap-northeast-2.elb.amazonaws.com",
+                            "https://pt-alb-573380929.ap-northeast-2.elb.amazonaws.com"
+                    ));
                     config.setAllowedMethods(java.util.List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
                     config.setAllowedHeaders(java.util.List.of("*"));
                     return config;

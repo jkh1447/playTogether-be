@@ -44,8 +44,11 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         // 배포시 cors설정
-        registry.addEndpoint("/ws-matching").setAllowedOriginPatterns(serverConfig.getUrl())
-                .addInterceptors(handshakeAuthInterceptor);
+        registry.addEndpoint("/ws-matching").setAllowedOriginPatterns(
+                serverConfig.getUrl(),
+                "http://pt-alb-573380929.ap-northeast-2.elb.amazonaws.com",
+                "https://pt-alb-573380929.ap-northeast-2.elb.amazonaws.com"
+        ).addInterceptors(handshakeAuthInterceptor);
     }
 
     // 구독 연결시 실행
