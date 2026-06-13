@@ -79,8 +79,8 @@ export const options = {
 // ════════════════════════════════════════════════════════════════
 //  상수
 // ════════════════════════════════════════════════════════════════
-const BASE_URL = "https://da-gachi.com";
-const WS_URL   = "wss://da-gachi.com/ws-matching";
+const BASE_URL = "https://pt-alb-573380929.ap-northeast-2.elb.amazonaws.com";
+const WS_URL   = "wss://pt-alb-573380929.ap-northeast-2.elb.amazonaws.com/ws-matching";
 
 // const BASE_URL = "http://localhost:8080";
 // const WS_URL   = "ws://localhost:8080/ws-matching";
