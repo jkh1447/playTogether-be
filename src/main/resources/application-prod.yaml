@@ -69,18 +69,17 @@ server:
       min-spare: 50
     accept-count: 200
 
-
-logging:
-  level:
-    root: INFO
-    org.springframework.messaging: WARN
-    org.springframework.web.socket: WARN
+# logging:
+#   level:
+#     root: ERROR
+#     org.springframework.messaging: WARN
+#     org.springframework.web.socket: WARN
 
 management:
   endpoints:
     web:
       exposure:
-        include: "prometheus,metrics" 
+        include: "prometheus,metrics"
   endpoint:
     prometheus:
       enabled: true
