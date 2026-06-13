@@ -70,11 +70,11 @@ server:
     accept-count: 200
     max-connections: 1000
 
-# logging:
-#   level:
-#     root: ERROR
-#     org.springframework.messaging: WARN
-#     org.springframework.web.socket: WARN
+logging:
+  level:
+    root: ERROR
+    org.springframework.messaging: WARN
+    org.springframework.web.socket: WARN
 
 management:
   endpoints:
