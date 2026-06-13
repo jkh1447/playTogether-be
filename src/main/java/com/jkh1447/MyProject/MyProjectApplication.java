@@ -13,14 +13,12 @@ import org.springframework.scheduling.annotation.EnableAsync;
 @EnableJpaAuditing
 @SpringBootApplication
 @EnableScheduling
-@EnableSpringDataWebSupport(pageSerializationMode = EnableSpringDataWebSupport.PageSerializationMode.VIA_DTO)
+@EnableSpringDataWebSupport(
+		pageSerializationMode = EnableSpringDataWebSupport.PageSerializationMode.VIA_DTO)
 public class MyProjectApplication {
 
-	@PostConstruct
-    public void started() {
-        TimeZone.setDefault(TimeZone.getTimeZone("Asia/Seoul"));
-    }
-	
+
+
 	public static void main(String[] args) {
 		SpringApplication.run(MyProjectApplication.class, args);
 	}

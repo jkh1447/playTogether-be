@@ -65,9 +65,10 @@ server:
     mbeanregistry:
       enabled: true
     threads:
-      max: 200
-      min-spare: 50
+      max: 100
+      min-spare: 10
     accept-count: 200
+    max-connections: 1000
 
 # logging:
 #   level:
