@@ -79,11 +79,11 @@ export const options = {
 // ════════════════════════════════════════════════════════════════
 //  상수
 // ════════════════════════════════════════════════════════════════
-// const BASE_URL = "https://da-gachi.com";
-// const WS_URL   = "wss://da-gachi.com/ws-matching";
+const BASE_URL = "https://da-gachi.com";
+const WS_URL   = "wss://da-gachi.com/ws-matching";
 
-const BASE_URL = "http://localhost:8080";
-const WS_URL   = "ws://localhost:8080/ws-matching";
+// const BASE_URL = "http://localhost:8080";
+// const WS_URL   = "ws://localhost:8080/ws-matching";
 // VU → 3개 큐 균등 분산 (큐 키: queue:LoL:groupSize=5:{mode})
 const QUEUE_PROFILES = [
   { mode: "랭크",     groupSize: "5", myRank: "실버", rankRange: "아이언~챌린저", position: "상관없음" },
@@ -118,7 +118,7 @@ export default function () {
   check(loginRes, { "로그인 성공": () => loginOk });
 
   if (!loginOk) {
-    console.error(`[LOGIN FAIL] status=${loginRes.status}`);
+    console.error(`[${new Date().toISOString()}] [LOGIN FAIL] status=${loginRes.status}`);
     return;
   }
 
@@ -127,13 +127,13 @@ export default function () {
   const cookies = jar.cookiesForURL(BASE_URL);
   const accessToken = cookies.accessToken ? cookies.accessToken[0] : null;
   if (!accessToken) {
-    console.error(`[TOKEN MISSING] VU=${__VU}`);
+    console.error(`[${new Date().toISOString()}] [TOKEN MISSING] VU=${__VU}`);
     return;
   }
 
   const payload = parseJwt(accessToken);
   if (!payload || !payload.sub) {
-    console.error(`[JWT PARSE FAIL] VU=${__VU}`);
+    console.error(`[${new Date().toISOString()}] [JWT PARSE FAIL] VU=${__VU}`);
     return;
   }
   const userId   = payload.sub;
@@ -172,7 +172,7 @@ export default function () {
         // STOMP ERROR
         if (msg.startsWith("ERROR")) {
           stompErrorCount.add(1);
-          console.error(`[STOMP ERROR] VU=${__VU} ${msg.substring(0, 200)}`);
+          console.error(`[${new Date().toISOString()}] [STOMP ERROR] VU=${__VU} ${msg.substring(0, 200)}`);
           socket.close();
           return;
         }
@@ -182,7 +182,7 @@ export default function () {
           const handshakeMs = Date.now() - wsStart;
           wsHandshakeDuration.add(handshakeMs);
           wsConnectRate.add(1);
-          console.log(`[WS CONNECTED] VU=${__VU} mode=${profile.mode} handshake=${handshakeMs}ms`);
+          console.log(`[${new Date().toISOString()}] [WS CONNECTED] VU=${__VU} mode=${profile.mode} handshake=${handshakeMs}ms`);
 
           // 구독 (매칭 알림 먼저)
           socket.send("SUBSCRIBE\nid:sub-0\ndestination:/user/queue/match-found\n\n\0");
@@ -201,12 +201,12 @@ export default function () {
           check(joinRes, { "매칭 큐 참가 성공": () => joinOk });
 
           if (!joinOk) {
-            console.error(`[JOIN FAIL] VU=${__VU} status=${joinRes.status} dur=${joinMs}ms`);
+            console.error(`[${new Date().toISOString()}] [JOIN FAIL] VU=${__VU} status=${joinRes.status} dur=${joinMs}ms`);
             return;
           }
 
           queueJoinTime = Date.now();
-          console.log(`[JOIN OK] VU=${__VU} mode=${profile.mode} dur=${joinMs}ms`);
+          console.log(`[${new Date().toISOString()}] [JOIN OK] VU=${__VU} mode=${profile.mode} dur=${joinMs}ms`);
           return;
         }
 
@@ -223,7 +223,7 @@ export default function () {
         try {
           data = JSON.parse(bodyStr);
         } catch (e) {
-          console.warn(`[JSON FAIL] VU=${__VU} body=${bodyStr.substring(0, 80)}`);
+          console.warn(`[${new Date().toISOString()}] [JSON FAIL] VU=${__VU} body=${bodyStr.substring(0, 80)}`);
           return;
         }
 
@@ -237,7 +237,7 @@ export default function () {
             matchFoundOnce = true;
             const waitMs = Date.now() - queueJoinTime;
             matchWaitDuration.add(waitMs);
-            console.log(`[MATCH FOUND] VU=${__VU} mode=${profile.mode} wait=${waitMs}ms`);
+            console.log(`[${new Date().toISOString()}] [MATCH FOUND] VU=${__VU} mode=${profile.mode} wait=${waitMs}ms`);
           }
 
           // 중복 수락 방지
@@ -268,10 +268,10 @@ export default function () {
 
             if (!acceptOk) {
               acceptFailCount.add(1);
-              console.error(`[ACCEPT FAIL] VU=${__VU} status=${acceptRes.status} dur=${acceptMs}ms matchId=${matchId}`);
+              console.error(`[${new Date().toISOString()}] [ACCEPT FAIL] VU=${__VU} status=${acceptRes.status} dur=${acceptMs}ms matchId=${matchId}`);
             } else {
               acceptSentTime = Date.now(); // accept 완료 시각 기록
-              console.log(`[ACCEPT OK] VU=${__VU} matchId=${matchId} dur=${acceptMs}ms`);
+              console.log(`[${new Date().toISOString()}] [ACCEPT OK] VU=${__VU} matchId=${matchId} dur=${acceptMs}ms`);
             }
           }, 500);
           return;
@@ -286,7 +286,7 @@ export default function () {
           if (acceptSentTime) {
             const moveDelayMs = Date.now() - acceptSentTime;
             moveRoomDelay.add(moveDelayMs);
-            console.log(`[MOVE ROOM] VU=${__VU} roomId=${data.roomId} acceptToMove=${moveDelayMs}ms`);
+            console.log(`[${new Date().toISOString()}] [MOVE ROOM] VU=${__VU} roomId=${data.roomId} acceptToMove=${moveDelayMs}ms`);
           }
 
           const roomId = data.roomId;
@@ -306,7 +306,7 @@ export default function () {
                 }
                 chatCompleted = true;
                 chatCompleteRate.add(1);
-                console.log(`[CHAT DONE] VU=${__VU} roomId=${roomId}`);
+                console.log(`[${new Date().toISOString()}] [CHAT DONE] VU=${__VU} roomId=${roomId}`);
                 socket.send(`UNSUBSCRIBE\nid:sub-chat-${roomId}\n\n\0`);
                 socket.setTimeout(() => socket.close(), 2000);
                 return;
@@ -348,7 +348,7 @@ export default function () {
         }
         if (e.error() !== "websocket: close sent") {
           wsErrorCount.add(1);
-          console.error(`[WS ERROR] VU=${__VU} ${e.error()}`);
+          console.error(`[${new Date().toISOString()}] [WS ERROR] VU=${__VU} ${e.error()}`);
         }
       });
 
@@ -375,7 +375,7 @@ export default function () {
       // ── 전체 타임아웃 (90초) ─────────────────────────────────
       socket.setTimeout(() => {
         matchTimeoutCount.add(1);
-        console.warn(`[TIMEOUT] VU=${__VU} mode=${profile.mode} matchFound=${matchFound}`);
+        console.warn(`[${new Date().toISOString()}] [TIMEOUT] VU=${__VU} mode=${profile.mode} matchFound=${matchFound}`);
         socket.close();
       }, 90000);
     },
@@ -384,6 +384,6 @@ export default function () {
   // WS 연결 자체 실패 감지 (핸드셰이크 전 실패)
   if (!wsRes || wsRes.status !== 101) {
     wsConnectRate.add(0);
-    console.error(`[WS CONNECT FAIL] VU=${__VU} status=${wsRes ? wsRes.status : "null"}`);
+    console.error(`[${new Date().toISOString()}] [WS CONNECT FAIL] VU=${__VU} status=${wsRes ? wsRes.status : "null"}`);
   }
 }
